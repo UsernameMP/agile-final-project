@@ -9,7 +9,7 @@ const PI=Math.PI, MU0=4e-7*PI, EPS0=8.8541878128e-12, KB=1.380649e-23,
 const DEF=Object.freeze({
  maxOD:100,maxH:100,minBore:10,minOD:60,minH:20,
  epsilonR:72,lossTangent:0.030,conductivity:0.004,efieldShare:0.94,
- qMetal:85,qCoupler:33,etaMag:0.18,xi:0.46,leakage:0.80,
+ qMetal:85,qCoupler:33,feedFactor:1.0,xi:0.46,leakage:0.80,
  t1e:3.0e-6,t2e:55e-9,esrHalfMHz:0.82,esrWidthMHz:0.40,
  tDNP:1.0,T2star:2.0,gradientNTM:20,ampNV:0.85,ampPA:0.08,
  b0:B0,T:293.15,protonDensity:6.68e28,rfEfficiency:0.55,
@@ -113,18 +113,28 @@ function modePoints(mode,c){
 function precompute(b,g,mode,c){
  const modes=modePoints(mode,c);
  let rmid=(b.inner+b.outer)/4000;
- let b1rms=Math.sqrt(2*MU0*c.etaMag*b.rfPower*g.qLoad/(WRF*g.volEff));
+ // Axisymmetric quasi-static Maxwell-Ampere field for a radial capacitor:
+ // -(dH_phi/dz) ~= (sigma + i*omega*eps)*E_r. Symmetric feed: H_phi(0)=0.
+ // Consequently B_phi changes sign at mid-plane; RF B1 is NOT uniform in z.
+ // Feed geometry / axial return currents are still unknown: feedFactor is a fitted proxy.
+ let er=EPS0*c.epsilonR,cap=g.capPF*1e-12;
+ let vrms=Math.sqrt(b.rfPower*g.qLoad/(WRF*cap));
+ let admittance=Math.hypot(c.conductivity,WRF*er);
+ let axialRms=g.he/Math.sqrt(12);
+ let b1rms=MU0*admittance*vrms/(rmid*Math.log(outerRadius(b)/innerRadius(b)))*axialRms*c.feedFactor;
  let alpha0=Math.pow(GE*b1rms,2)*c.t1e*c.t2e;
  let spl=[];
  for(let esr of [-c.esrHalfMHz,c.esrHalfMHz]){
   let spec=0;for(let [f,p] of modes) spec+=p*rfSpectral(f,esr,c,g.qLoad);
   spl.push(spec);
  }
- return {alpha0,spl,rmid,rfP:b.rfPower,rfT:b.rfTime,
+ return {alpha0,spl,rmid,rfP:b.rfPower,rfT:b.rfTime,he:g.he,vrms,
   b1UT:b1rms*1e6,mode};
 }
 function ePolar(pre,r,z,phi,theta,c,b){
- let b1shape=(pre.rmid/r)*(1-.20*Math.pow(2*z/(b.height/1000),2));
+ // Axial displacement-current mode: B1_phi proportional to z; sample mid-plane has a node.
+ let zz=Math.max(-pre.he/2,Math.min(pre.he/2,z));
+ let b1shape=(pre.rmid/r)*(zz/(pre.he/Math.sqrt(12)));
  let x=Math.sin(theta)*Math.sin(phi);
  let transverse=1-x*x;
  let alpha=pre.alpha0*b1shape*b1shape*transverse;
@@ -198,7 +208,7 @@ function estimate(b,g,mode,c,detail=false){
   od:g.od,hh:g.hh,bore:g.bore,volume:g.volume,envelope:g.eenv,
   errorPT:worst,conservativePT:worst*robustScale,energyJ:shotJ,
   angleRatio:amin/Math.max(amax,1e-30),worstTheta,ampUV:amin*1e6,
-  rfQ:g.qLoad,rfQDielectric:g.qDie,rfCapPF:g.capPF,rfIndNH:g.rfLNH,rfB1UT:pre.b1UT,
+  rfQ:g.qLoad,rfQDielectric:g.qDie,rfCapPF:g.capPF,rfIndNH:g.rfLNH,rfB1UT:pre.b1UT,rfDriveVrms:pre.vrms,
   rfHeatJ:heatJ,deltaTmK:deltaT*1000,rfESRMean:meanSat/Math.max(wn,1e-30),
   dnpMean:meanEps/Math.max(wn,1e-30),coilR:g.R,coilLMH:g.L*1000,coilLayers:g.layers,
   rxGain:g.gain,rxNoiseNV:g.noise*1e9,coilLengthM:g.length,
