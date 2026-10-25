@@ -111,6 +111,17 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <p class="caption">JSON совместим с <a href="fem/build_cad.py">CadQuery-генератором STEP</a> (команда: <code>python build_cad.py --config selected.json --out generated</code>). Это геометрия, <strong>не решённая FEM-задача</strong>. Для RF-расчёта нужно добавить физический подвод и возврат токов.</p>
 <p class="caption">Готовая STEP-сборка контрольного расчётного варианта №2332: <a href="fem/selected_90mm_4J/GeoMesh_V4_FEM_assembly.step" download>скачать STEP</a> · <a href="fem/selected_90mm_4J/candidate_config.json">параметры</a> · <a href="fem/selected_90mm_4J/geometry_manifest.json">объёмы и размерности</a>. Это НЕ результат FEM-моделирования.</p>
 <p id="spinResults" class="caption">Расчёт выбранного импульса выполняется отдельно; исходный фронт использует ускоренную оценку адиабатичности.</p>
+<hr style="border:0;border-top:1px solid var(--border);margin:19px 0"/>
+<h3>V4.4 · комплексный FID и оценка частоты</h3>
+<p class="caption">Рассчитывается только выбранная головка. Пространственные знаковые вклады DNP, неоднородность поля по оси, T₂*, мёртвое время общей катушки и шум приёмника формируют IQ-сигнал. Частота извлекается цифровым согласованным оценивателем; повторные циклы показывают разброс. Фазы RF-поля и локальный Bloch-импульс пока не известны из FEM: приведённый сигнал <strong>условный</strong>.</p>
+<div class="fields" style="margin-top:10px">
+<div class="field"><label for="fidAngle">Угол поля к оси тора</label><select id="fidAngle"><option value="0">0° · осевой</option><option value="45">45°</option><option value="90">90° · поперечный</option></select></div>
+<div class="field"><label for="fidCycles">Повторные IQ-измерения</label><select id="fidCycles"><option value="16">16</option><option value="32" selected>32</option><option value="64">64</option></select></div>
+</div>
+<button id="fidRun" style="margin-top:10px">Рассчитать FID и цифровую частоту</button>
+<p class="caption" id="fidResults">Расчёт по выбранной конструкции ещё не запускался.</p>
+<canvas id="fidPlot" aria-label="Комплексный FID: идеальная I, зашумлённые I/Q"></canvas>
+<p class="caption">График: I идеальная / I и Q с модельным шумом. Предположения: общий фазовый отсчёт спинов, белый независимый IQ-шум, известное T₂* и градиент, без ошибок ADC. Монте-Карло оценивает разброс только в этих предположениях; это <strong>не метрологическая погрешность</strong>.</p>
 </section>
 </div>
 <div class="plots">
@@ -124,11 +135,11 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <div><h3>Пока требует измерений или 3D-поля</h3><p class="caption">3D RF-поле с учётом вводов, обратных токов и торцевых полей (текущий расчёт — квазистатика); реальные ESR-линии выбранного радикала; T₁e и T₂e; сольватация и перенос поляризации; магнитная восприимчивость жидкости, электродов и корпуса; паразитная емкость и токи утечки; защита и восстановление реального усилителя; полный комплексный FID при 3D-карте неоднородности поля. Все пТ сейчас модельные, а не измеренные.</p></div>
 </div>
 <p><a href="fem/README.md">Постановка COMSOL/ANSYS</a> · <a href="FORMULAS.md">Полный реестр уравнений, источников неопределённости и проверок</a> · <a href="model.js">Исходный код</a> · <a href="README.md">Описание ревизии</a></p>
-</section></main><footer>GeoMesh V4.3 · одно тороидальное Оверхаузеровское измерительное устройство · GitHub Pages</footer>
-<script src="model.js?v=4.3.0"></script><script>
+</section></main><footer>GeoMesh V4.4 · одно тороидальное Оверхаузеровское измерительное устройство · GitHub Pages</footer>
+<script src="model.js?v=4.4.0"></script><script src="fid.js?v=4.4.0"></script><script>
 (function(){
 "use strict";
-const PI=Math.PI, $=s=>document.getElementById(s), M=window.GeoMeshV4;
+const PI=Math.PI, $=s=>document.getElementById(s), M=window.GeoMeshV4, F=window.GeoMeshV4FID;
 let dataset=[],visible=[],front=[],selected=null,currentCfg={},stats={},scenario='nominal';
 let yaw=.64,pitch=.42,deviceYaw=.55,devicePitch=.42,plotPins=[];
 const fmt=(n,d=2)=>Number.isFinite(Number(n))?Number(n).toLocaleString('ru-RU',{maximumFractionDigits:d,minimumFractionDigits:0}):'—';
@@ -253,6 +264,7 @@ function showSelected(){
  ]);
  showKappaCheck(p);
  $('spinResults').textContent='Нажми «Проверить динамику» для интегрирования протонной прецессии именно в этой катушке.';
+  $('fidResults').textContent='Новая конструкция выбрана; IQ/FID ещё не рассчитан.';
 }
 
 function showKappaCheck(p){
@@ -404,6 +416,44 @@ $('spinTest').onclick=()=>{
  '<strong>при осевом поле '+fmt(a.ratio*100,1)+'%</strong>, при поперечном <strong>'+fmt(b.ratio*100,1)+'%</strong> '+
  'от идеального адиабатического отклонения. Это проверка *импульса*, не полная электронная DNP-модель. '+
  'Текущий Парето сохраняет ускоренную оценку импульса; эти проценты не перенесены в его пТ.';
+};
+function drawFID(s){
+ const {ctx,w,h}=scaleCanvas($('fidPlot'));
+ ctx.clearRect(0,0,w,h);
+ ctx.fillStyle='#99b5c6';ctx.font='12px system-ui';
+ ctx.fillText('V4.4 · I/Q после гипотетического приёмника (мкВ)',12,20);
+ const L=50,R=w-15,T=38,B=h-35,n=s.time.length;
+ const vmax=Math.max(1e-15,...s.idealRe.map(Math.abs),...s.re.map(Math.abs),...s.im.map(Math.abs))*1.08;
+ const xpos=i=>L+(R-L)*i/(n-1),ypos=y=>(T+B)/2-(y/vmax)*(B-T)/2;
+ ctx.strokeStyle='#3b5264';ctx.lineWidth=1;
+ ctx.beginPath();ctx.moveTo(L,(T+B)/2);ctx.lineTo(R,(T+B)/2);ctx.stroke();
+ function trace(a,color,width){
+  ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();
+  for(let i=0;i<n;i++){const x=xpos(i),y=ypos(a[i]);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}
+  ctx.stroke();
+ }
+ trace(s.idealRe,'#6dc5cf',2.0);trace(s.re,'#e4a06a',1.1);trace(s.im,'#a49bed',1.1);
+ ctx.fillStyle='#96aec2';ctx.fillText('0',L-13,(T+B)/2+4);
+ ctx.fillText('t = '+fmt(s.time[0],3)+'…'+fmt(s.time[n-1],3)+' с',L,B+20);
+ ctx.fillStyle='#6dc5cf';ctx.fillText('I идеальная',L,T-5);
+ ctx.fillStyle='#e4a06a';ctx.fillText('I с шумом',L+100,T-5);
+ ctx.fillStyle='#a49bed';ctx.fillText('Q с шумом',L+205,T-5);
+}
+$('fidRun').onclick=()=>{
+ if(!selected)return;
+ $('fidResults').textContent='Вычисление выбранного сигнала…';
+ try{
+  const v=F.run(selected,currentCfg,{orientationDeg:Number($('fidAngle').value),
+   sampleRateHz:80,durationS:1.6,offsetHz:.23,trials:Number($('fidCycles').value),seed:20261025+selected.id});
+  const f=v.fit,m=v.mc;
+  $('fidResults').textContent='Модельный FID: '+v.sim.cells+' пространственных ячеек; '+
+   'уровень I/Q '+fmt(f.signalRmsUV,4)+' мкВ, шум на отсчёт '+fmt(f.noiseRmsUV,4)+' мкВ; '+
+   'введено +0,230 Гц, получено '+fmt(f.offsetHz,5)+' Гц. '+
+   'Ошибка одного цикла '+fmt(f.deltaPT,2)+' пТ; локальная CRLB '+fmt(f.crlbPT,2)+' пТ; '+
+   'стандартное отклонение '+m.trials+' циклов '+fmt(m.stdPT,2)+' пТ, смещение '+fmt(m.biasPT,2)+
+   ' пТ. Это воспроизводимый синтетический эксперимент, без FEM/реального шума.';
+  drawFID(v.sim);
+ }catch(e){$('fidResults').textContent='Расчёт FID не выполнен: '+e.message}
 };
 $('exportCad').onclick=()=>{
   if(!selected)return;
