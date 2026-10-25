@@ -23,5 +23,7 @@ jobs:
           node-version: '22'
       - name: Verify 5000-case physics scenario and Pareto
         run: node v4/test_v4.js
+      - name: Verify conditional complex FID frequency estimator
+        run: node v4/test_fid.js
       - name: Verify interactive UI and 90 mm recalc
         run: node v4/test_browser_smoke.js
