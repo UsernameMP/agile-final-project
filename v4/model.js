@@ -155,7 +155,7 @@ function estimate(b,g,mode,c,detail=false){
  const M0=c.protonDensity*Math.pow(GP*HBAR/2,2)*c.b0/(KB*c.T);
  const orientations=[0,PI/6,PI/3,PI/2];
  let worst=-1, best=Infinity,amin=Infinity,amax=0, worstTheta=0;
- let meanSat=0,meanEps=0,wn=0;
+ let meanSat=0,meanEps=0,signedEps=0,wn=0;
  for(let th of orientations){
   let A=0,azMom=0,zMom=0,volW=0;
   // integrate actual filleted cross-section, uniform azimuthal sampling
@@ -174,7 +174,7 @@ function estimate(b,g,mode,c,detail=false){
      let weight=dV*p.epsilon*MU0*b.turns/(2*PI*rr)*
                  tip*rampFactor*offFactor;
      A+=weight; azMom+=weight*z;volW+=weight;
-     if(th===0){meanSat+=p.sat*dV;meanEps+=Math.abs(p.epsilon)*dV;wn+=dV;}
+     if(th===0){meanSat+=p.sat*dV;meanEps+=Math.abs(p.epsilon)*dV;signedEps+=p.epsilon*dV;wn+=dV;}
     }
    }
   }
@@ -210,7 +210,7 @@ function estimate(b,g,mode,c,detail=false){
   angleRatio:amin/Math.max(amax,1e-30),worstTheta,ampUV:amin*1e6,
   rfQ:g.qLoad,rfQDielectric:g.qDie,rfCapPF:g.capPF,rfIndNH:g.rfLNH,rfB1UT:pre.b1UT,rfDriveVrms:pre.vrms,
   rfHeatJ:heatJ,deltaTmK:deltaT*1000,rfESRMean:meanSat/Math.max(wn,1e-30),
-  dnpMean:meanEps/Math.max(wn,1e-30),coilR:g.R,coilLMH:g.L*1000,coilLayers:g.layers,
+  dnpMean:meanEps/Math.max(wn,1e-30),dnpSignedMean:signedEps/Math.max(wn,1e-30),dnpCancellation:Math.abs(signedEps)/Math.max(meanEps,1e-30),coilR:g.R,coilLMH:g.L*1000,coilLayers:g.layers,
   rxGain:g.gain,rxNoiseNV:g.noise*1e9,coilLengthM:g.length,
   pulseCurrentA:g.ip,pulseOffUS:g.offUS,pulseRiseV:g.riseV,
   deadMS:g.dead*1000,energyPulseJ:g.pulseEnergy,rfInputJ:eRF,coilTuneUF:g.tuneUF,
