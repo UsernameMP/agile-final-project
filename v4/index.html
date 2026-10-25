@@ -48,7 +48,8 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <nav><a href="#workspace">Оптимизация</a><a href="#device-panel">3D-геометрия</a><a href="#details-panel">Электрика и RF</a><a href="FORMULAS.md">Все формулы и допущения</a><a href="model.js">Расчётный JavaScript</a><a href="../v3/">Архив V3</a></nav>
 </header>
 <main>
-<section class="panel"><div class="crit"><strong>Исследовательский расчёт, не паспортная чувствительность.</strong> Радиальные RF-электроды создают электрическое поле. Для симметричной квазистатической моды <i>B₁φ</i> оценивается из уравнения Ампера–Максвелла и <strong>обращается в ноль в средней плоскости сосуда</strong>. Реальная картина может меняться из-за RF-подвода, разрезов электродов и обратных токов: их влияние пока параметризовано неизвестным коэффициентом κ. Без 3D электродинамического расчёта или измерений нельзя считать этот магнитный профиль подтверждённым. Систематическая heading-ошибка и магнитная восприимчивость материалов не вычисляются. Не использовать представленные пТ для метрологической аттестации или выбора готового датчика.</div></section>
+<section class="panel"><div class="crit"><strong>Исследовательский расчёт, не паспортная чувствительность.</strong> Радиальные RF-электроды создают электрическое поле. Для симметричной квазистатической моды <i>B₁φ</i> оценивается из уравнения Ампера–Максвелла и <strong>имеет нуль в средней плоскости лишь для предположенной симметричной RF-моды</strong>. Реальная картина может меняться из-за RF-подвода, разрезов электродов и обратных токов: их влияние пока параметризовано неизвестным коэффициентом κ. Без 3D электродинамического расчёта или измерений нельзя считать этот магнитный профиль подтверждённым. Систематическая heading-ошибка и магнитная восприимчивость материалов не вычисляются. Не использовать представленные пТ для метрологической аттестации или выбора готового датчика.</div></section>
+<section class="panel"><div class="crit"><strong>Почему график показывает сотни пТ?</strong> В этом сценарии параметры жидкости и RF-электродов дают загруженную RF-добротность около 12 и слабое насыщение ESR. Кроме того, выбранная симметричная RF-мода имеет нуль B₁ на середине высоты, а положительная и инвертированная DNP-намагниченности отдельных слоёв могут взаимно компенсировать FID. Все три эффекта <strong>зависят от непроверенной модели RF-подвода</strong>. Это не измеренная чувствительность и не основание считать, что реальная головка будет иметь шум 800 пТ. Публикация Li et al. даёт <strong>1,69 пТ/√Гц</strong> для другой, экспериментально настроенной архитектуры; здесь выводятся <strong>пТ на цикл</strong>, поэтому показатели нельзя численно приравнивать.</div></section>
 <div class="layout" id="workspace">
 <aside class="panel">
 <h2>Ограничения и физические сценарии</h2>
@@ -62,7 +63,7 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 </div>
 <hr style="border:0;border-top:1px solid var(--border);margin:19px 0"/>
 <h3>Параметры раствора и RF (для полного пересчёта)</h3>
-<div class="field"><label for="etaB">Коэффициент RF-токов и вводов, κ</label><input id="feedFactor" type="number" value="1" min=".1" max="2" step=".1"/></div>
+<div class="field"><label for="feedFactor">Коэффициент RF-токов и вводов, κ</label><input id="feedFactor" type="number" value="1" min=".1" max="2" step=".1"/></div>
 <div class="fields" style="margin-top:10px">
 <div class="field"><label for="conductivity">Электропроводность, С/м</label><input id="conductivity" type="number" min="0" max=".2" value=".004" step=".001"/></div>
 <div class="field"><label for="lossTangent">tan δ растворителя</label><input id="lossTangent" type="number" min=".002" max=".3" value=".030" step=".005"/></div>
@@ -189,7 +190,10 @@ function showSelected(){
  ['RF P / t',fmt(p.rfPower,2)+' Вт / '+fmt(p.rfTime,2)+' с'],
  ['B₁ rms, квазистатика + κ',fmt(p.rfB1UT,2)+' мкТ'],
  ['RF напряжение rms на обкладках',fmt(p.rfDriveVrms,2)+' В'],
- ['Усиление DNP, ср. модуль',fmt(p.dnpMean,1)+'×'],
+ ['Средний модуль DNP |ε|',fmt(p.dnpMean,2)+'×'],
+  ['DNP со знаком, среднее ε',fmt(p.dnpSignedMean,2)+'×'],
+  ['Коэффициент пространственной компенсации',fmt(p.dnpCancellation*100,1)+'%'],
+  ['Среднее насыщение ESR',fmt(p.rfESRMean*100,2)+'%'],
  ['Суммарная поглощённая RF-энергия',fmt(p.rfHeatJ,3)+' Дж'],
  ['Адиабатический критерий (proxy)',fmt(p.tipRampFactor,3)],
  ['Импульс поле / ток',fmt(p.pulseMT,2)+' мТ / '+fmt(p.pulseCurrentA,3)+' А'],
@@ -208,7 +212,11 @@ function showSelected(){
  .map(([label,fn])=>{const a=p.mode==='single'?p:other,b=p.mode==='dual'?p:other;return '<tr><td>'+label+'</td><td>'+fn(a)+'</td><td>'+fn(b)+'</td></tr>'}).join('')+'</tbody></table>'):'Нет парного решения';
  $('quality').innerHTML=datumRows([
  ['Жидкость ограничивает RF-Q',p.rfQDielectric<p.rfQ*2.1?'Существенно':'Умеренно'],
- ['Радиальные электроды','B₁φ ∝ z · Eᵣ · κ; нуль в середине'],
+  ['Эффективность ESR, средняя',fmt(p.rfESRMean*100,2)+'% (предположенная химия)'],
+  ['Средняя DNP с учётом знака',fmt(p.dnpSignedMean,2)+'× (при осевом поле)'],
+  ['Компенсация противоположной поляризации',fmt((1-p.dnpCancellation)*100,1)+'% потерь (объёмная оценка)'],
+  ['Сопоставимость с 1,69 пТ/√Гц','НЕТ: другая топология и единицы; RF не верифицирован'], 
+ ['Радиальные электроды','B₁φ ∝ z · Eᵣ · κ только для выбранных граничных условий'],
  ['Коэффициент RF-вводов κ','Гипотеза, по умолчанию 1'],
  ['Индуктивность RF-согласования',fmt(p.rfIndNH,1)+' нГн'],
  ['RF-нагрев за измерение',fmt(p.deltaTmK,2)+' мК, адиабат. оценка'],
@@ -344,7 +352,7 @@ $('spinTest').onclick=()=>{
 };
 $('export').onclick=()=>{
  if(!visible.length)return;
- const cols=['id','baseId','mode','outer','inner','height','fillet','od','hh','bore','volume','turns','wire','rfPower','rfTime','rfQ','rfCapPF','rfIndNH','rfB1UT','dnpMean','pulseMT','riseMS','pulseOffUS','deadMS','coilR','coilLMH','errorPT','conservativePT','energyJ','deltaTmK','headingBiasPT'];
+ const cols=['id','baseId','mode','outer','inner','height','fillet','od','hh','bore','volume','turns','wire','rfPower','rfTime','rfQ','rfCapPF','rfIndNH','rfB1UT','dnpMean','dnpSignedMean','dnpCancellation','rfESRMean','pulseMT','riseMS','pulseOffUS','deadMS','coilR','coilLMH','errorPT','conservativePT','energyJ','deltaTmK','headingBiasPT'];
  const rows=[cols.join(',')].concat(visible.map(p=>cols.map(k=>p[k]===null?'':p[k]).join(',')));
  const file=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8'});
  const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download='GeoMesh_V4_filtered.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
