@@ -123,7 +123,7 @@ function geometry(b,c){
    const penalty=Math.max(.25,1+c.rfVolumeLoss*(ratio-1)+
       .14*(c.conductivity/.000003-1)+.10*(c.lossTangent/.003-1)+
       .06*(c.vesselTanDelta/.001-1));
-   qa=c.rfQReference/penalty;qd=qa*3; // effective Q proxies
+   qa=c.rfQReference/penalty; // qd remains radial-capacitor diagnostic; no invented cavity dielectric Q
    hf=Math.max(0,Math.min(.95,c.rfLiquidLossFraction*
      Math.pow(ratio,.25)*(.3*c.conductivity/.000003+.7*c.lossTangent/.003)));
    hw=Math.max(0,Math.min(.2,.015*c.vesselTanDelta/.001));
@@ -368,7 +368,7 @@ function validate(){
  let area=(b.outer-b.inner)/2*b.height-(4-PI)*b.fillet*b.fillet;
  let expected=PI*(b.outer+b.inner)*area/2000;
  if(Math.abs(expected-g.volume)>1e-9)throw Error('volume');
- if(g.qLoad>=g.qDie||(c.rfArchitecture==='radial'&&g.qLoad>=c.qMetal))throw Error('Q physical');
+ if(c.rfArchitecture==='radial'&&(g.qLoad>=g.qDie||g.qLoad>=c.qMetal))throw Error('radial Q physical');
  if(!Number.isFinite(g.noise)||g.noise<=0||g.gain<=0)throw Error('receiver');
  let b1=precompute(b,g,'single',c);
  if(!(b1.b1UT>0))throw Error('B1');
