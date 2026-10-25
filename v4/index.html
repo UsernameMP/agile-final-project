@@ -119,6 +119,7 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <div class="field"><label for="fidCycles">Повторные IQ-измерения</label><select id="fidCycles"><option value="16">16</option><option value="32" selected>32</option><option value="64">64</option></select></div>
 </div>
 <button id="fidRun" style="margin-top:10px">Рассчитать FID и цифровую частоту</button>
+<button id="fidExport" style="margin-top:8px;background:#152632">Экспортировать IQ-отсчёты CSV</button>
 <p class="caption" id="fidResults">Расчёт по выбранной конструкции ещё не запускался.</p>
 <canvas id="fidPlot" aria-label="Комплексный FID: идеальная I, зашумлённые I/Q"></canvas>
 <p class="caption">График: I идеальная / I и Q с модельным шумом. Предположения: общий фазовый отсчёт спинов, белый независимый IQ-шум, известное T₂* и градиент, без ошибок ADC. Монте-Карло оценивает разброс только в этих предположениях; это <strong>не метрологическая погрешность</strong>.</p>
@@ -140,7 +141,7 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 (function(){
 "use strict";
 const PI=Math.PI, $=s=>document.getElementById(s), M=window.GeoMeshV4, F=window.GeoMeshV4FID;
-let dataset=[],visible=[],front=[],selected=null,currentCfg={},stats={},scenario='nominal';
+let dataset=[],visible=[],front=[],selected=null,currentCfg={},stats={},scenario='nominal',lastFid=null;
 let yaw=.64,pitch=.42,deviceYaw=.55,devicePitch=.42,plotPins=[];
 const fmt=(n,d=2)=>Number.isFinite(Number(n))?Number(n).toLocaleString('ru-RU',{maximumFractionDigits:d,minimumFractionDigits:0}):'—';
 const modeName=m=>m==='dual'?'Две частоты':'Одна частота';
@@ -265,6 +266,7 @@ function showSelected(){
  showKappaCheck(p);
  $('spinResults').textContent='Нажми «Проверить динамику» для интегрирования протонной прецессии именно в этой катушке.';
   $('fidResults').textContent='Новая конструкция выбрана; IQ/FID ещё не рассчитан.';
+  lastFid=null;
 }
 
 function showKappaCheck(p){
@@ -445,6 +447,7 @@ $('fidRun').onclick=()=>{
  try{
   const v=F.run(selected,currentCfg,{orientationDeg:Number($('fidAngle').value),
    sampleRateHz:80,durationS:1.6,offsetHz:.23,trials:Number($('fidCycles').value),seed:20261025+selected.id});
+  lastFid=v;
   const f=v.fit,m=v.mc;
   $('fidResults').textContent='Модельный FID: '+v.sim.cells+' пространственных ячеек; '+
    'уровень I/Q '+fmt(f.signalRmsUV,4)+' мкВ, шум на отсчёт '+fmt(f.noiseRmsUV,4)+' мкВ; '+
@@ -454,6 +457,25 @@ $('fidRun').onclick=()=>{
    ' пТ. Это воспроизводимый синтетический эксперимент, без FEM/реального шума.';
   drawFID(v.sim);
  }catch(e){$('fidResults').textContent='Расчёт FID не выполнен: '+e.message}
+};
+$('fidExport').onclick=()=>{
+ if(!lastFid)return;
+ const {sim,fit,mc}=lastFid;
+ const meta=[
+  '# GeoMesh V4.4; uncalibrated synthetic IQ data; no measured sensor performance',
+  '# case_id='+sim.rowId+', angle_deg='+sim.orientationDeg+', carrier_hz='+sim.carrierHz,
+  '# injected_offset_hz='+sim.offsetHz+', estimated_offset_hz='+fit.offsetHz,
+  '# IQ_noise_std_v='+sim.noiseStdV+', sample_rate_hz='+sim.fsHz+', seed='+sim.seed,
+  '# Monte_Carlo_cycles='+mc.trials+', MC_std_pt='+mc.stdPT,
+  'time_s,ideal_i_v,ideal_q_v,noisy_i_v,noisy_q_v'
+ ];
+ for(let i=0;i<sim.time.length;i++){
+  meta.push([sim.time[i],sim.idealRe[i],sim.idealIm[i],sim.re[i],sim.im[i]].join(','));
+ }
+ const blob=new Blob([meta.join('\n')+'\n'],{type:'text/csv;charset=utf-8'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+ a.download='GeoMesh_V4_4_IQ_case_'+sim.rowId+'.csv';a.click();
+ setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 };
 $('exportCad').onclick=()=>{
   if(!selected)return;
