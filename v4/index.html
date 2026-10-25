@@ -137,7 +137,7 @@ function validInputs(c){
 }
 function clear(){selected=null;dataset=[];visible=[];front=[];$('chosen').textContent='Нет рассчитанных конструкций'}
 function rebuild(){
- let c=packInputs();if(!validInputs(c)){$('status').textContent='Проверь диапазоны и условие ESR: ширина ≥ 1/(2π T₂e)';return}
+ let c=packInputs();if(!validInputs(c)){$('status').textContent='Несогласованность ESR: полуширина должна быть ≥ 1/(2π T₂e); проверь также диапазоны';return}
  $('rebuild').disabled=true;$('status').textContent='Расчёт 5 000 вариантов (одна LF-катушка × два RF-режима)…';
  setTimeout(function(){
  try{const s=performance.now(),data=M.build(c,2500,20261025);dataset=data.points;stats=data.stats;currentCfg=c;
