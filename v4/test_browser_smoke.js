@@ -14,7 +14,7 @@ assert.match(html,/const PI=Math\.PI/,'canvas and geometry must define PI locall
 const script=html.match(/<script src="model\.js\?v=[^"]+"><\/script><script>([\s\S]*?)<\/script>/);
 assert.ok(script,'published UI script must follow the versioned model.js script');
 new vm.Script(script[1],{filename:'index-inline.js'});
-const ids={};
+const ids={},downloaded=[],blobs=[];
 for(const match of html.matchAll(/<(?:input|select|button|canvas|p|div|strong|tbody|section)\b[^>]*\bid="([^"]+)"[^>]*>/g)){
  const tag=match[0],id=match[1];
  const value=tag.match(/\bvalue="([^"]*)"/);
@@ -42,13 +42,13 @@ for(const [id,v] of Object.entries({
 const window={devicePixelRatio:1,addEventListener(){}};
 const document={
  getElementById(id){assert.ok(ids[id],'unknown ID '+id);return ids[id]},
- createElement(){return{}}
+ createElement(){return{click(){downloaded.push(this)}}}
 };
 const ctx={
  window,document,performance:{now(){return 0}},
  setTimeout(fn){fn();return 0},clearTimeout(){},
  console,Math,Number,String,Array,Object,Map,Set,Date,Error,Infinity,NaN,
- Blob:class{},URL:{createObjectURL(){return'blob:stub'},revokeObjectURL(){}}
+ Blob:class{constructor(parts,options){this.parts=parts;this.options=options;blobs.push(this)}},URL:{createObjectURL(){return'blob:stub'},revokeObjectURL(){}}
 };
 vm.createContext(ctx);
 vm.runInContext(model,ctx,{filename:'model.js',timeout:25000});
@@ -77,6 +77,18 @@ ids.rebuild.onclick();assert.match(ids.status.textContent,/Готово:/,'wall 
 const countThick=Number(ids.count.textContent.replace(/\s/g,''));
 assert.ok(countThick>0&&countThick<=5000);
 ids.vesselWallMM.value='.7';ids.rebuild.onclick();assert.match(ids.status.textContent,/Готово:/);
+assert.equal(Number(ids.count.textContent.replace(/\s/g,'')),count90);
+assert.equal(typeof ids.exportCad.onclick,'function','CAD export button should be active');
+ids.exportCad.onclick();
+assert.ok(downloaded.length>0&&blobs.length>0,'CAD configuration downloaded');
+const cad=JSON.parse(blobs.at(-1).parts.join(''));
+assert.ok(cad.source_case_id>0&&cad.source_model_version==='4.3');
+assert.ok(cad.corner_radius_mm>=cad.vessel_wall_mm,'STEP rounded vessel geometry physically fit');
+const buildup=cad.vessel_wall_mm+cad.copper_electrode_thickness_mm+
+ cad.rf_insulation_mm+cad.winding_envelope_mm+cad.epoxy_mm;
+assert.ok(cad.outer_liquid_d_mm+2*buildup<=90+1e-8,'selected CAD fits filtered diameter');
+assert.ok(cad.liquid_height_mm+2*buildup<=100+1e-8,'selected CAD fits height');
+console.log('PASS: exported Pareto-selected physical vessel parameters for STEP CAD');
 console.log(JSON.stringify({
  status:'pass',revision:'V4.3',defaultCount:5000,filteredCount90:count90,
  defaultFront:fullFront,front90,recalculation90:'PASS',invalidESR:'PASS'
