@@ -48,7 +48,7 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <nav><a href="#workspace">Оптимизация</a><a href="#device-panel">3D-геометрия</a><a href="#details-panel">Электрика и RF</a><a href="FORMULAS.md">Все формулы и допущения</a><a href="model.js">Расчётный JavaScript</a><a href="../v3/">Архив V3</a></nav>
 </header>
 <main>
-<section class="panel"><div class="crit"><strong>Исследовательский расчёт, не паспортная чувствительность.</strong> В частности, радиальные RF-электроды создают электрическое поле, но величина и пространственная карта <i>B₁</i>, необходимого для насыщения ESR, без электродинамического решателя или измерения неизвестны. Здесь её задаёт явно регулируемый <i>коэффициент магнитного участия</i>. Систематическая heading-ошибка и магнитная восприимчивость материалов не вычисляются. Не использовать представленные пТ для метрологической аттестации или выбора готового датчика.</div></section>
+<section class="panel"><div class="crit"><strong>Исследовательский расчёт, не паспортная чувствительность.</strong> Радиальные RF-электроды создают электрическое поле. Для симметричной квазистатической моды <i>B₁φ</i> оценивается из уравнения Ампера–Максвелла и <strong>обращается в ноль в средней плоскости сосуда</strong>. Реальная картина может меняться из-за RF-подвода, разрезов электродов и обратных токов: их влияние пока параметризовано неизвестным коэффициентом κ. Без 3D электродинамического расчёта или измерений нельзя считать этот магнитный профиль подтверждённым. Систематическая heading-ошибка и магнитная восприимчивость материалов не вычисляются. Не использовать представленные пТ для метрологической аттестации или выбора готового датчика.</div></section>
 <div class="layout" id="workspace">
 <aside class="panel">
 <h2>Ограничения и физические сценарии</h2>
@@ -62,7 +62,7 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 </div>
 <hr style="border:0;border-top:1px solid var(--border);margin:19px 0"/>
 <h3>Параметры раствора и RF (для полного пересчёта)</h3>
-<div class="field"><label for="etaB">Доля магнитной энергии RF в жидкости, η<sub>B</sub></label><input id="etaB" type="number" value=".18" min=".005" max=".5" step=".01"/></div>
+<div class="field"><label for="etaB">Коэффициент RF-токов и вводов, κ</label><input id="feedFactor" type="number" value="1" min=".1" max="2" step=".1"/></div>
 <div class="fields" style="margin-top:10px">
 <div class="field"><label for="conductivity">Электропроводность, С/м</label><input id="conductivity" type="number" min="0" max=".2" value=".004" step=".001"/></div>
 <div class="field"><label for="lossTangent">tan δ растворителя</label><input id="lossTangent" type="number" min=".002" max=".3" value=".030" step=".005"/></div>
@@ -106,7 +106,7 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <section class="panel"><h2>Что именно вычислено и что ещё неизвестно</h2>
 <div class="details">
 <div><h3>Рассчитывается явно</h3><p class="caption">Объём скруглённого кольца; реальная упаковка провода; сопротивление и идеализированная индуктивность тора; электрическая ёмкость радиальных RF-электродов; предел RF-добротности от потерь жидкости; согласующая индуктивность; RF-энергия и нагрев за цикл; низкочастотная импульсная энергия; параллельный RLC-приём; распределённый сигнал FID и расчётная нижняя граница ошибки частоты; Bloch-прецессия протонов для выбранного импульса.</p></div>
-<div><h3>Пока требует измерений или 3D-поля</h3><p class="caption">Магнитное RF-поле, создаваемое именно этой парой радиальных электродов; реальные ESR-линии выбранного радикала; T₁e и T₂e; сольватация и перенос поляризации; магнитная восприимчивость жидкости, электродов и корпуса; паразитная емкость и токи утечки; защита и восстановление реального усилителя; полный комплексный FID при 3D-карте неоднородности поля. Все пТ сейчас модельные, а не измеренные.</p></div>
+<div><h3>Пока требует измерений или 3D-поля</h3><p class="caption">3D RF-поле с учётом вводов, обратных токов и торцевых полей (текущий расчёт — квазистатика); реальные ESR-линии выбранного радикала; T₁e и T₂e; сольватация и перенос поляризации; магнитная восприимчивость жидкости, электродов и корпуса; паразитная емкость и токи утечки; защита и восстановление реального усилителя; полный комплексный FID при 3D-карте неоднородности поля. Все пТ сейчас модельные, а не измеренные.</p></div>
 </div>
 <p><a href="FORMULAS.md">Полный реестр уравнений, источников неопределённости и проверок</a> · <a href="model.js">Исходный код</a> · <a href="README.md">Описание ревизии</a></p>
 </section></main><footer>GeoMesh V4 · одно тороидальное Оверхаузеровское измерительное устройство · GitHub Pages</footer>
@@ -120,11 +120,11 @@ const fmt=(n,d=2)=>Number.isFinite(Number(n))?Number(n).toLocaleString('ru-RU',{
 const modeName=m=>m==='dual'?'Две частоты':'Одна частота';
 const errorKey=()=>scenario==='stress'?'conservativePT':'errorPT';
 function packInputs(){
- return {etaMag:Number($('etaB').value),conductivity:Number($('conductivity').value),
+ return {feedFactor:Number($('feedFactor').value),conductivity:Number($('conductivity').value),
  lossTangent:Number($('lossTangent').value),xi:Number($('xi').value),T2star:Number($('T2star').value)};
 }
 function validInputs(c){
- return c.etaMag>.004&&c.etaMag<=.5&&c.conductivity>=0&&c.conductivity<=.2&&
+ return c.feedFactor>=.1&&c.feedFactor<=2&&c.conductivity>=0&&c.conductivity<=.2&&
  c.lossTangent>=.002&&c.lossTangent<=.3&&c.xi>=.01&&c.xi<=1&&c.T2star>=.1&&c.T2star<=8;
 }
 function clear(){selected=null;dataset=[];visible=[];front=[];$('chosen').textContent='Нет рассчитанных конструкций'}
@@ -187,7 +187,8 @@ function showSelected(){
  ['Согласующая RF-индуктивность',fmt(p.rfIndNH,2)+' нГн'],
  ['RF Q жидкости / общий Q',fmt(p.rfQDielectric,1)+' / '+fmt(p.rfQ,1)],
  ['RF P / t',fmt(p.rfPower,2)+' Вт / '+fmt(p.rfTime,2)+' с'],
- ['B₁ rms, **гипотетически**',fmt(p.rfB1UT,2)+' мкТ'],
+ ['B₁ rms, квазистатика + κ',fmt(p.rfB1UT,2)+' мкТ'],
+ ['RF напряжение rms на обкладках',fmt(p.rfDriveVrms,2)+' В'],
  ['Усиление DNP, ср. модуль',fmt(p.dnpMean,1)+'×'],
  ['Суммарная поглощённая RF-энергия',fmt(p.rfHeatJ,3)+' Дж'],
  ['Адиабатический критерий (proxy)',fmt(p.tipRampFactor,3)],
@@ -207,7 +208,8 @@ function showSelected(){
  .map(([label,fn])=>{const a=p.mode==='single'?p:other,b=p.mode==='dual'?p:other;return '<tr><td>'+label+'</td><td>'+fn(a)+'</td><td>'+fn(b)+'</td></tr>'}).join('')+'</tbody></table>'):'Нет парного решения';
  $('quality').innerHTML=datumRows([
  ['Жидкость ограничивает RF-Q',p.rfQDielectric<p.rfQ*2.1?'Существенно':'Умеренно'],
- ['Радиальные электроды','Электростатика; B₁ не рассчитано'],
+ ['Радиальные электроды','B₁φ ∝ z · Eᵣ · κ; нуль в середине'],
+ ['Коэффициент RF-вводов κ','Гипотеза, по умолчанию 1'],
  ['Индуктивность RF-согласования',fmt(p.rfIndNH,1)+' нГн'],
  ['RF-нагрев за измерение',fmt(p.deltaTmK,2)+' мК, адиабат. оценка'],
  ['Систематическая heading-ошибка','НЕ РАССЧИТАНА'],
