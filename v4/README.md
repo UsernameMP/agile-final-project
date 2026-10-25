@@ -1,6 +1,6 @@
-# GeoMesh Overhauser V4.2 — single high-toroid head
+# GeoMesh Overhauser V4.3 — single high-toroid head
 
-[Open V4 on GitHub Pages](https://usernamemp.github.io/agile-final-project/v4/?rev=4.2.0)
+[Open V4 on GitHub Pages](https://usernamemp.github.io/agile-final-project/v4/?rev=4.3.0)
 
 ## Architecture locked for V4
 
@@ -42,9 +42,9 @@ No Python runtime or backend is required to use the published website; it comput
 |---|---:|
 | Generated variants | 5,000 |
 | Independent candidate vessels | 2,500 |
-| 3D Pareto points (unfiltered) | 233 |
-| Of those: single / dual RF | 109 / 124 |
-| Smallest conditional frequency-error noise | ~124 pT/shot |
+| 3D Pareto points (unfiltered) | 273 |
+| Of those: single / dual RF | 146 / 127 |
+| Smallest conditional frequency-error noise | ~258 pT/shot |
 | Minimum energy among all candidates | ~0.366 J/shot |
 
 The absolute values **must not be compared** with Li et al.'s 1.69 pT/√Hz without matched bandwidth/time and validated electron-radical and RF parameters. The large modeled noise is *not proof that the hardware will have this noise*: it illustrates how strongly the unverified RF electrode mode and DNP gain govern the forecast. **Critical parameter inconsistency:** `T2e=55 ns` requires homogeneous ESR HWHM ≥2.89 MHz, while V4 assumes 0.40 MHz; therefore the listed pT and Pareto noise rankings are not physically calibrated. The V4.2 viewer shows signed DNP polarization and spatial cancellation diagnostics. Read FORMULAS.md audit appendix.
@@ -110,3 +110,11 @@ The inventory targets **localhost**; change it explicitly to an authorized machi
 - [FEM setup guidance](fem/README.md) including port topology, results required for the optimizer and verification gates.
 
 The CAD export was generated and checked by GitHub Actions, but **no COMSOL/ANSYS model has been solved**: no software license or physically defined RF feeds were available in this environment. The STEP baseline is an illustrative candidate, **not** the selected Pareto optimum.
+
+## V4.3 layered-vessel correction (2026-10-25)
+
+The V4.0–4.2 circuit incorrectly modeled an RF capacitor directly across the liquid, even though the actual STEP vessel places RF metal electrodes **outside the insulating vessel walls**. V4.3 introduces the two dielectric wall layers in series with the liquid, recomputes RF capacitance, liquid voltage division, effective liquid RF B1, dielectric Q, liquid/wall heat deposition and winding package dimensions. The code exposes wall thickness, wall dielectric constant and wall loss tangent.
+
+With the representative Ø70/36 × H75 mm liquid and 0.7 mm walls (electrode end clearance 3 mm), the ideal-coaxial capacitance changes **415.6 pF → 154.3 pF**, and the nominal calculated B1 at 0.5 W **2.04 µT → 1.48 µT**, while Q increases due to reduced liquid participation. These are **analytic screening numbers**, not RF FEM.
+
+GitHub Actions check both model physics and the UI at Ø90 mm. Current regression reports **5,000 scenarios, 273 Pareto points, and 257.6 pT/shot minimum conditional frequency error**. This is not measured sensor noise or proof that this topology cannot reach a few pT. Actual RF feed and liquid-specific ESR parameters remain the dominant unknowns. Full [derivation](FORMULAS.md).
