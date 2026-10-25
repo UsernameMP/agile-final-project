@@ -154,28 +154,33 @@ function modePoints(mode,c){
  return mode==='dual'?[[-c.esrHalfMHz,.5],[c.esrHalfMHz,.5]]:[[c.esrHalfMHz,1]];
 }
 function precompute(b,g,mode,c){
- const modes=modePoints(mode,c);
- let rmid=(b.inner+b.outer)/4000;
- // Axisymmetric quasi-static Maxwell-Ampere field for a radial capacitor:
- // -(dH_phi/dz) ~= (sigma + i*omega*eps)*E_r. Symmetric feed: H_phi(0)=0.
- // Consequently B_phi changes sign at mid-plane; RF B1 is NOT uniform in z.
- // Feed geometry / axial return currents are still unknown: feedFactor is a fitted proxy.
- let er=EPS0*c.epsilonR,cap=g.capPF*1e-12;
- // Voltage across the entire series dielectric stack, including matching stray-C load.
- let vrms=Math.sqrt(b.rfPower*g.qLoad/(WRF*(cap+c.rfStrayPF*1e-12)));
- let admittance=Math.hypot(c.conductivity,WRF*er);
- let axialRms=g.he/Math.sqrt(12);
- // Only the portion V_liquid=V_terminal*D_liquid/D_stack drives current in the liquid.
- let b1rms=MU0*admittance*vrms*g.rfLiquidVoltageFraction/
-    (rmid*Math.log(outerRadius(b)/innerRadius(b)))*axialRms*c.feedFactor;
- let alpha0=Math.pow(GE*b1rms,2)*c.t1e*c.t2e;
+ const modes=modePoints(mode,c),rmid=(b.inner+b.outer)/4000;
+ const cap=g.capPF*1e-12;
+ // Terminal voltage below is only the RADIAL-capacitor diagnostic in literature mode.
+ const vrms=Math.sqrt(b.rfPower*g.qLoad/(WRF*(cap+c.rfStrayPF*1e-12)));
+ let b1rms,alpha0;
+ if(c.rfArchitecture==='literature'){
+   // A fitted effective ESR half-saturation-power model. P_half = 0.4W is
+   // inferred from reported ~1.5W saturation, not measured for GeoMesh.
+   // Coupling falls with excited liquid volume and rises with Q and feed quality.
+   alpha0=(b.rfPower/c.rfSaturationPowerW)*(g.qLoad/c.rfQReference)*
+     (c.rfRefVolumeML/g.volume)*Math.pow(c.feedFactor,2)*
+     (c.t1e*c.t2e/(c.rfReferenceT1e*c.rfReferenceT2e));
+   b1rms=Math.sqrt(alpha0/(GE*GE*c.t1e*c.t2e));
+ }else{
+   const er=EPS0*c.epsilonR,axialRms=g.he/Math.sqrt(12);
+   const admittance=Math.hypot(c.conductivity,WRF*er);
+   b1rms=MU0*admittance*vrms*g.rfLiquidVoltageFraction/
+     (rmid*Math.log(outerRadius(b)/innerRadius(b)))*axialRms*c.feedFactor;
+   alpha0=Math.pow(GE*b1rms,2)*c.t1e*c.t2e;
+ }
  let spl=[];
- for(let esr of [-c.esrHalfMHz,c.esrHalfMHz]){
-  let spec=0;for(let [f,p] of modes) spec+=p*rfSpectral(f,esr,c,g.qLoad);
-  spl.push(spec);
+ for(const esr of [-c.esrHalfMHz,c.esrHalfMHz]){
+   let spec=0;for(const [f,p] of modes)spec+=p*rfSpectral(f,esr,c,g.qLoad);
+   spl.push(spec);
  }
  return {alpha0,spl,rmid,rfP:b.rfPower,rfT:b.rfTime,he:g.he,vrms,
-  b1UT:b1rms*1e6,mode};
+   b1UT:b1rms*1e6,mode,rfArchitecture:c.rfArchitecture};
 }
 function ePolar(pre,r,z,phi,theta,c,b){
  // Axial displacement-current mode: B1_phi proportional to z; sample mid-plane has a node.
