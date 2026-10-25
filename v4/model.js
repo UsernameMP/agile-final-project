@@ -281,6 +281,7 @@ function estimate(b,g,mode,c,detail=false){
   deadMS:g.dead*1000,energyPulseJ:g.pulseEnergy,rfInputJ:eRF,coilTuneUF:g.tuneUF,
   tipRampFactor:rampFactor,tipOffFactor:offFactor,headingBiasPT:null};
  row.resolutionPTsqrtHz=row.errorPT*Math.sqrt(row.cycleS);
+ row.conservativePTsqrtHz=row.conservativePT*Math.sqrt(row.cycleS);
  row.thermalMeanW=heatJ/row.cycleS;
  return row;
 }
@@ -305,8 +306,9 @@ function build(cIn,nBase=2500,seed=20261025,progress){
  if(out.length!==nBase*2)throw Error('Only '+out.length+'/'+nBase*2+' feasible');
  return {points:out,stats:{trials:tries,rejections:reasons,nbase:nBase,total:out.length},c};
 }
-function pareto(rows,useConservative=false){
- let key=useConservative?'conservativePT':'errorPT';
+function pareto(rows,useConservative=false,metric='shot'){
+ let key=metric==='time'?(useConservative?'conservativePTsqrtHz':'resolutionPTsqrtHz'):
+   (useConservative?'conservativePT':'errorPT');
  let sorted=rows.slice().sort((a,b)=>a[key]-b[key]||a.energyJ-b.energyJ||a.envelope-b.envelope);
  let front=[];
  for(let p of sorted){
