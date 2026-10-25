@@ -107,6 +107,8 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <section class="panel" id="details-panel"><h2>Параметры выбранной конструкции</h2>
 <div id="chosen">Выберите точку Парето.</div>
 <button id="spinTest" style="margin-top:12px">Проверить динамику отклоняющего импульса (Bloch)</button>
+<button id="exportCad" style="margin-top:10px;background:#19505a">Экспортировать выбранную головку для COMSOL / ANSYS (CAD JSON)</button>
+<p class="caption">JSON совместим с <a href="fem/build_cad.py">CadQuery-генератором STEP</a> (команда: <code>python build_cad.py --config selected.json --out generated</code>). Это геометрия, <strong>не решённая FEM-задача</strong>. Для RF-расчёта нужно добавить физический подвод и возврат токов.</p>
 <p id="spinResults" class="caption">Расчёт выбранного импульса выполняется отдельно; исходный фронт использует ускоренную оценку адиабатичности.</p>
 </section>
 </div>
@@ -334,19 +336,23 @@ function drawDevice(){
   points.forEach(([x,y,z],i)=>{let s=proj(x,y,z);if(!i)ctx.moveTo(s.x,s.y);else ctx.lineTo(s.x,s.y)});
   ctx.stroke();ctx.globalAlpha=1;
  }
- const bb=p.coilLayers*p.wire*1.12+.45,zz=half+bb,roW=ro+bb,riW=ri-bb;
+ const wall=p.vesselWallMM,foil=M.DEF.electrodeCopperMM,barrier=M.DEF.rfBarrierMM;
+  const bb=p.coilLayers*p.wire*1.12+wall+foil+barrier,zz=half+bb,roW=ro+bb,riW=ri-bb;
+  const electrodeOuter=ro+wall,electrodeInner=ri-wall,electrodeHalf=half-Math.max(M.DEF.electrodeEndClearanceMM,p.fillet);
  // Tall rounded rectangular annulus: transparent wall grid and continuous electrode outlines
  for(let j=0;j<48;j++){
   let a=j*2*PI/48,b=(j+1)*2*PI/48;
   line3([[ro*Math.cos(a),ro*Math.sin(a),-half],[ro*Math.cos(b),ro*Math.sin(b),-half],
    [ro*Math.cos(b),ro*Math.sin(b),half],[ro*Math.cos(a),ro*Math.sin(a),half]],'#356b75',.7,.20);
  }
- outlineRing(ro,half,'#5da4b0',2,.85);outlineRing(ro,-half,'#44818b',1,.4);
- outlineRing(ri,half,'#d7a25f',2,.8);outlineRing(ri,-half,'#ad824d',1,.45);
+ outlineRing(ro,half,'#5da4b0',1.2,.45);outlineRing(ro,-half,'#44818b',1,.4);
+ outlineRing(ri,half,'#d7a25f',1.2,.45);outlineRing(ri,-half,'#ad824d',1,.45);
+ outlineRing(electrodeOuter,electrodeHalf,'#60e1e0',2.0,.9);
+ outlineRing(electrodeInner,electrodeHalf,'#e7a761',2.0,.8);
  for(let i=0;i<24;i++){
   let t=i*2*PI/24;
-  line3([[ro*Math.cos(t),ro*Math.sin(t),-half+2],[ro*Math.cos(t),ro*Math.sin(t),half-2]],'#4eb4c1',1.4,.37);
-  line3([[ri*Math.cos(t),ri*Math.sin(t),-half+2],[ri*Math.cos(t),ri*Math.sin(t),half-2]],'#e9ab60',1.4,.36);
+  line3([[electrodeOuter*Math.cos(t),electrodeOuter*Math.sin(t),-electrodeHalf],[electrodeOuter*Math.cos(t),electrodeOuter*Math.sin(t),electrodeHalf]],'#4eb4c1',1.4,.37);
+  line3([[electrodeInner*Math.cos(t),electrodeInner*Math.sin(t),-electrodeHalf],[electrodeInner*Math.cos(t),electrodeInner*Math.sin(t),electrodeHalf]],'#e9ab60',1.4,.36);
  }
  // A subset of actual cross-sectional turns, evenly distributed azimuthally.
  let wireTurns=[];
@@ -397,6 +403,29 @@ $('spinTest').onclick=()=>{
  '<strong>при осевом поле '+fmt(a.ratio*100,1)+'%</strong>, при поперечном <strong>'+fmt(b.ratio*100,1)+'%</strong> '+
  'от идеального адиабатического отклонения. Это проверка *импульса*, не полная электронная DNP-модель. '+
  'Текущий Парето сохраняет ускоренную оценку импульса; эти проценты не перенесены в его пТ.';
+};
+$('exportCad').onclick=()=>{
+  if(!selected)return;
+  const p=selected,c=M.DEF;
+  const cad={
+    outer_liquid_d_mm:p.outer,inner_liquid_d_mm:p.inner,
+    liquid_height_mm:p.height,corner_radius_mm:p.fillet,
+    vessel_wall_mm:p.vesselWallMM,
+    copper_electrode_thickness_mm:c.electrodeCopperMM,
+    electrode_end_clearance_mm:Math.max(c.electrodeEndClearanceMM,p.fillet),
+    electrode_axial_slot_mm:0.8,rf_insulation_mm:c.rfBarrierMM,
+    winding_envelope_mm:p.coilLayers*p.wire*1.12,
+    epoxy_mm:c.epoxyMM,winding_turns:p.turns,winding_wire_d_mm:p.wire,
+    rf_nominal_frequency_mhz:58.8,lf_nominal_frequency_hz:267.52218744e6*50e-6/(2*Math.PI),
+    rf_nominal_input_power_w:p.rfPower,nominal_earth_field_uT:50,
+    source_model_version:'4.3',source_case_id:p.id,
+    source_rf_mode:p.mode,source_model_sigma_pt_per_shot:p.errorPT,
+    source_model_status:'UNCALIBRATED: geometry only; no validated RF field or pT sensitivity'
+  };
+  const file=new Blob([JSON.stringify(cad,null,2)+'\n'],{type:'application/json;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(file);
+  a.download='GeoMesh_V4_3_CAD_case_'+p.id+'.json';a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 };
 $('export').onclick=()=>{
  if(!visible.length)return;
