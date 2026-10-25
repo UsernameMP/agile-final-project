@@ -38,7 +38,7 @@ for(const [id,v] of Object.entries({
  ampNV:'1.4',readS:'1.6',feedFactor:'1',epsilonR:'7.23',conductivity:'.000003',
  vesselWallMM:'.7',vesselEpsilonR:'3.8',vesselTanDelta:'.001',
  lossTangent:'.003',xi:'.46',T2star:'2.68',t2eNs:'420',esrWidthMHz:'.4',
- dMax:'100',hMax:'100',bMin:'10',eMax:'8'
+ dMax:'100',hMax:'100',bMin:'10',eMax:'8',heatMax:'.6'
 })){
  assert.ok(ids[id],'missing input '+id);
  ids[id].value=v;
