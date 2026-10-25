@@ -31,7 +31,7 @@ function roundingH(r,ri,ro,h,fil){
 }
 function geometry(b,c){
  const w=(b.outer-b.inner)/2,h=b.height,f=b.fillet,ri=b.inner/2;
- if(w<6||f<.5||f>Math.min(w/2,h/2)||b.height<40)return null;
+ if(w<6||f<Math.max(.5,c.vesselWallMM)||f>Math.min(w/2,h/2)||b.height<40)return null; // CAD rounded vessel must fit its wall thickness
  if(!(c.vesselWallMM>=0&&c.vesselEpsilonR>1&&c.vesselTanDelta>=0&&c.electrodeCopperMM>=0))return null;
  let pitch=b.wire*1.12, rest=b.turns,layers=[],offset=c.vesselWallMM+c.electrodeCopperMM+c.rfBarrierMM;
  for(let j=0;j<45&&rest>0;j++){
