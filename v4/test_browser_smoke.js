@@ -32,7 +32,7 @@ for(const match of html.matchAll(/<(?:input|select|button|canvas|p|div|strong|tb
  };
 }
 for(const [id,v] of Object.entries({
- rfMode:'all',scenario:'nominal',fidAngle:'0',fidCycles:'16',
+ rfMode:'all',scenario:'nominal',objective:'shot',fidAngle:'0',fidCycles:'16',
  rfArchitecture:'literature',rfQReference:'1278',rfSaturationPowerW:'.4',
  rfVolumeLoss:'.35',rfAxialNonuniformity:'.16',rfLiquidLossFraction:'.28',
  ampNV:'1.4',readS:'1.6',feedFactor:'1',epsilonR:'7.23',conductivity:'.000003',
@@ -85,10 +85,14 @@ assert.ok(countThick>0&&countThick<=5000);
 ids.vesselWallMM.value='.7';ids.rebuild.onclick();assert.match(ids.status.textContent,/Готово:/);
 assert.equal(Number(ids.count.textContent.replace(/\s/g,'')),count90);
 assert.equal(typeof ids.exportCad.onclick,'function','CAD export button should be active');
+ids.objective.value='time';ids.objective.listeners.change();
+assert.match(ids.besterrorunit.textContent,/пТ\/√Гц/);
+assert.ok(Number(ids.besterror.textContent.replace(/\s/g,'').replace(',','.'))>0);
+ids.objective.value='shot';ids.objective.listeners.change();
 ids.exportCad.onclick();
 assert.ok(downloaded.length>0&&blobs.length>0,'CAD configuration downloaded');
 const cad=JSON.parse(blobs.at(-1).parts.join(''));
-assert.ok(cad.source_case_id>0&&cad.source_model_version==='4.3');
+assert.ok(cad.source_case_id>0&&cad.source_model_version==='4.5');
 assert.ok(cad.corner_radius_mm>=cad.vessel_wall_mm,'STEP rounded vessel geometry physically fit');
 const buildup=cad.vessel_wall_mm+cad.copper_electrode_thickness_mm+
  cad.rf_insulation_mm+cad.winding_envelope_mm+cad.epoxy_mm;
