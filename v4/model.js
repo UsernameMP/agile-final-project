@@ -7,19 +7,26 @@ const PI=Math.PI, MU0=4e-7*PI, EPS0=8.8541878128e-12, KB=1.380649e-23,
  HBAR=1.054571817e-34, GP=267.52218744e6, GE=1.76085963e11,
  RHO=1.724e-8, WRF=2*PI*58.8e6, B0=50e-6;
 const DEF=Object.freeze({
+ // References: Gong 2021 JOM-4S Q=1278 at 175ml; Gong 2026 Q≈1500.
+ // Effective coaxial RF regime is NOT the symmetric radial-electrode control.
+ rfArchitecture:'literature',rfQReference:1278,rfRefVolumeML:175,
+ // Inferred transfer coefficients to be replaced with measured B1/P curves.
+ rfSaturationPowerW:.40,rfVolumeLoss:.35,rfLiquidLossFraction:.28,
+ rfAxialNonuniformity:.16,rfRadialNonuniformity:.22,
+ rfReferenceT1e:3e-6,rfReferenceT2e:420e-9,
  maxOD:100,maxH:100,minBore:10,minOD:60,minH:20,
  epsilonR:72,lossTangent:0.030,conductivity:0.004,efieldShare:0.94,
  vesselWallMM:0.70,vesselEpsilonR:3.8,vesselTanDelta:0.001,electrodeCopperMM:0.05,
  electrodeEndClearanceMM:3.0,rfStrayPF:10.0,
  qMetal:85,qCoupler:33,feedFactor:1.0,xi:0.46,leakage:0.80,
  t1e:3.0e-6,t2e:420e-9,esrHalfMHz:0.82,esrWidthMHz:0.40,
- tDNP:1.0,T2star:2.0,gradientNTM:20,ampNV:0.85,ampPA:0.08,
+ tDNP:1.0,T2star:2.68,gradientNTM:20,ampNV:1.4,ampPA:0.10,
  b0:B0,T:293.15,protonDensity:6.68e28,rfEfficiency:0.55,
  contW:0.055,rfOverheadDual:0.035,readS:1.6,rxLoad:100000,
  pulseClamp:240,baseBlankS:0.0008,rfBarrierMM:0.45,epoxyMM:0.85
 });
-const WIRE=[0.30,0.36,0.40,0.45,0.50,0.54];
-const TURNS=[300,450,600,750,900,1100,1350,1600];
+const WIRE=[0.36,0.40,0.45,0.50,0.53,0.54,0.60];
+const TURNS=[450,600,700,900,1100,1400,1500,1800,2100];
 function RNG(seed){let x=seed>>>0;return ()=>{x^=x<<13;x^=x>>>17;x^=x<<5;return (x>>>0)/4294967296}}
 const uniform=(r,a,b)=>a+(b-a)*r(), choice=(r,a)=>a[Math.floor(r()*a.length)];
 function outerRadius(b){return b.outer/2000}
@@ -106,11 +113,24 @@ function geometry(b,c){
  // RF heat in LIQUID only; wall/coil and port losses are not added to the liquid's delta-T proxy.
  const heatFrac=Math.min(1,qLoad*pLiquid*tanLiquid);
  const heatWallFrac=Math.min(1,qLoad*pWall*c.vesselTanDelta);
+ // Literature Q is for a different EM mode from the layered radial C above.
+ // Keep that C as a diagnostic, not as the effective high-Q resonator.
+ let qa=qLoad,qd=qDie,hf=heatFrac,hw=heatWallFrac;
+ if(c.rfArchitecture==='literature'){
+   const ratio=volume/c.rfRefVolumeML;
+   const penalty=Math.max(.25,1+c.rfVolumeLoss*(ratio-1)+
+      .14*(c.conductivity/.004-1)+.10*(c.lossTangent/.03-1)+
+      .06*(c.vesselTanDelta/.001-1));
+   qa=c.rfQReference/penalty;qd=qa*3; // effective Q proxies
+   hf=Math.max(0,Math.min(.95,c.rfLiquidLossFraction*
+     Math.pow(ratio,.25)*(.3*c.conductivity/.004+.7*c.lossTangent/.03)));
+   hw=Math.max(0,Math.min(.2,.015*c.vesselTanDelta/.001));
+ }
  const eenv=PI*(od*od-bore*bore)/4*hh/1000;
  return {od,hh,bore,volume,eenv,section,p0,length,R,L,gain,noise,qSeries,qLoaded,
   tuneUF:cy*1e6,layers:layers.length,buildup,pitch,ip,riseV,offUS:offSec*1e6,
-  pulseEnergy:epulse,dead,capPF:C*1e12,capBarePF:Cbare*1e12,rfLNH:Lrf*1e9,qDie,qLoad,tanEff,
-  volEff,heatFrac,heatWallFrac,rfMaxERadial:pradius,he:hElectrode,
+  pulseEnergy:epulse,dead,capPF:C*1e12,capBarePF:Cbare*1e12,rfLNH:Lrf*1e9,qDie:qd,qLoad:qa,tanEff,
+  volEff,heatFrac:hf,heatWallFrac:hw,rfMaxERadial:pradius,he:hElectrode,
   rfLiquidVoltageFraction:liqVoltageFraction,rfLiquidEnergyShare:pLiquid,rfWallEnergyShare:pWall,
   rfLiquidLossTangent:tanLiquid,rfStackD:rfDsum,rfWallMM:c.vesselWallMM};
 }
@@ -127,7 +147,7 @@ function makeBase(r){
 }
 const integrate = (fun,a,b,n=32)=>{let h=(b-a)/n,sum=fun(a)+fun(b);for(let i=1;i<n;i++)sum+=(i%2?4:2)*fun(a+i*h);return sum*h/3};
 function rfSpectral(freqMHz,esrMHz,c,qL){
- const transfer=1/(1+Math.pow(2*qL*(freqMHz)/58.8,2));
+ const transfer=c.rfArchitecture==='literature'?1:1/(1+Math.pow(2*qL*(freqMHz)/58.8,2));
  return transfer/(1+Math.pow((freqMHz-esrMHz)/c.esrWidthMHz,2));
 }
 function modePoints(mode,c){
@@ -160,7 +180,12 @@ function precompute(b,g,mode,c){
 function ePolar(pre,r,z,phi,theta,c,b){
  // Axial displacement-current mode: B1_phi proportional to z; sample mid-plane has a node.
  let zz=Math.max(-pre.he/2,Math.min(pre.he/2,z));
- let b1shape=(pre.rmid/r)*(zz/(pre.he/Math.sqrt(12)));
+ let b1shape;
+ if(c.rfArchitecture==='literature'){
+   const radial=(r-pre.rmid)/pre.rmid,axial=2*zz/pre.he;
+   b1shape=Math.max(.2,(pre.rmid/r)*
+      (1-c.rfAxialNonuniformity*axial*axial-c.rfRadialNonuniformity*radial*radial));
+ }else b1shape=(pre.rmid/r)*(zz/(pre.he/Math.sqrt(12)));
  let x=Math.sin(theta)*Math.sin(phi);
  let transverse=1-x*x;
  let alpha=pre.alpha0*b1shape*b1shape*transverse;
@@ -239,12 +264,17 @@ function estimate(b,g,mode,c,detail=false){
   rfWallEnergyShare:g.rfWallEnergyShare,rfWallHeatingJ:b.rfPower*b.rfTime*g.heatWallFrac,
   vesselWallMM:c.vesselWallMM,vesselEpsilonR:c.vesselEpsilonR,
   rfIndNH:g.rfLNH,rfB1UT:pre.b1UT,rfDriveVrms:pre.vrms,esrWidthMHz:c.esrWidthMHz,t2eNS:c.t2e*1e9,esrHomHWHMMHz:1/(2*PI*c.t2e*1e6),
-  rfHeatJ:heatJ,deltaTmK:deltaT*1000,rfESRMean:meanSat/Math.max(wn,1e-30),
+  rfArchitecture:c.rfArchitecture,rfQReference:c.rfQReference,
+   rfSaturationPowerW:c.rfSaturationPowerW,
+   cycleS:b.rfTime+c.readS+g.dead+(b.riseMS+b.holdMS)*.001,
+   rfHeatJ:heatJ,deltaTmK:deltaT*1000,rfESRMean:meanSat/Math.max(wn,1e-30),
   dnpMean:meanEps/Math.max(wn,1e-30),dnpSignedMean:signedEps/Math.max(wn,1e-30),dnpCancellation:Math.abs(signedEps)/Math.max(meanEps,1e-30),coilR:g.R,coilLMH:g.L*1000,coilLayers:g.layers,
   rxGain:g.gain,rxNoiseNV:g.noise*1e9,coilLengthM:g.length,
   pulseCurrentA:g.ip,pulseOffUS:g.offUS,pulseRiseV:g.riseV,
   deadMS:g.dead*1000,energyPulseJ:g.pulseEnergy,rfInputJ:eRF,coilTuneUF:g.tuneUF,
   tipRampFactor:rampFactor,tipOffFactor:offFactor,headingBiasPT:null};
+ row.resolutionPTsqrtHz=row.errorPT*Math.sqrt(row.cycleS);
+ row.thermalMeanW=heatJ/row.cycleS;
  return row;
 }
 function build(cIn,nBase=2500,seed=20261025,progress){
@@ -329,7 +359,7 @@ function validate(){
  let area=(b.outer-b.inner)/2*b.height-(4-PI)*b.fillet*b.fillet;
  let expected=PI*(b.outer+b.inner)*area/2000;
  if(Math.abs(expected-g.volume)>1e-9)throw Error('volume');
- if(g.qLoad>=g.qDie||g.qLoad>=c.qMetal)throw Error('Q physical');
+ if(g.qLoad>=g.qDie||(c.rfArchitecture==='radial'&&g.qLoad>=c.qMetal))throw Error('Q physical');
  if(!Number.isFinite(g.noise)||g.noise<=0||g.gain<=0)throw Error('receiver');
  let b1=precompute(b,g,'single',c);
  if(!(b1.b1UT>0))throw Error('B1');
