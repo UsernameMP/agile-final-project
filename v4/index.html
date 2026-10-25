@@ -128,7 +128,7 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <button id="spinTest" style="margin-top:12px">Проверить динамику отклоняющего импульса (Bloch)</button>
 <button id="exportCad" style="margin-top:10px;background:#19505a">Экспортировать выбранную головку для COMSOL / ANSYS (CAD JSON)</button>
 <p class="caption">JSON совместим с <a href="fem/build_cad.py">CadQuery-генератором STEP</a> (команда: <code>python build_cad.py --config selected.json --out generated</code>). Это геометрия, <strong>не решённая FEM-задача</strong>. Для RF-расчёта нужно добавить физический подвод и возврат токов.</p>
-<p class="caption">Готовая STEP-сборка контрольного расчётного варианта №2332: <a href="fem/selected_90mm_4J/GeoMesh_V4_FEM_assembly.step" download>скачать STEP</a> · <a href="fem/selected_90mm_4J/candidate_config.json">параметры</a> · <a href="fem/selected_90mm_4J/geometry_manifest.json">объёмы и размерности</a>. Это НЕ результат FEM-моделирования.</p>
+<p class="caption">Готовая STEP-сборка контрольного расчётного варианта, автоматически пересоздаваемого из V4.5: <a href="fem/selected_90mm_4J/GeoMesh_V4_FEM_assembly.step" download>скачать STEP</a> · <a href="fem/selected_90mm_4J/candidate_config.json">параметры</a> · <a href="fem/selected_90mm_4J/geometry_manifest.json">объёмы и размерности</a>. Это НЕ результат FEM-моделирования.</p>
 <p id="spinResults" class="caption">Расчёт выбранного импульса выполняется отдельно; исходный фронт использует ускоренную оценку адиабатичности.</p>
 <hr style="border:0;border-top:1px solid var(--border);margin:19px 0"/>
 <h3 id="fid-panel">V4.4 · комплексный FID и оценка частоты</h3>
@@ -542,7 +542,7 @@ $('exportCad').onclick=()=>{
 };
 $('export').onclick=()=>{
  if(!visible.length)return;
- const cols=['id','baseId','mode','outer','inner','height','fillet','od','hh','bore','volume','turns','wire','rfPower','rfTime','rfQ','rfCapPF','rfIndNH','rfB1UT','dnpMean','dnpSignedMean','dnpCancellation','rfESRMean','pulseMT','riseMS','pulseOffUS','deadMS','coilR','coilLMH','errorPT','conservativePT','energyJ','deltaTmK','headingBiasPT'];
+ const cols=['rfArchitecture','resolutionPTsqrtHz','cycleS','thermalMeanW','id','baseId','mode','outer','inner','height','fillet','od','hh','bore','volume','turns','wire','rfPower','rfTime','rfQ','rfCapPF','rfIndNH','rfB1UT','dnpMean','dnpSignedMean','dnpCancellation','rfESRMean','rfQReference','rfSaturationPowerW','pulseMT','riseMS','pulseOffUS','deadMS','coilR','coilLMH','errorPT','conservativePT','energyJ','deltaTmK','headingBiasPT'];
  const rows=[cols.join(',')].concat(visible.map(p=>cols.map(k=>p[k]===null?'':p[k]).join(',')));
  const file=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8'});
  const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download='GeoMesh_V4_filtered.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
