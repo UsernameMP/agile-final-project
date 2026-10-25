@@ -93,6 +93,12 @@ assert.ok(cad.outer_liquid_d_mm+2*buildup<=90+1e-8,'selected CAD fits filtered d
 assert.ok(cad.liquid_height_mm+2*buildup<=100+1e-8,'selected CAD fits height');
 ids.fidRun.onclick();
 assert.match(ids.fidResults.textContent,/Модельный FID:/,'FID selected-case button performs actual computation');
+ids.fidExport.onclick();
+const csv=blobs.at(-1).parts.join('');
+assert.match(csv,/time_s,ideal_i_v,ideal_q_v,noisy_i_v,noisy_q_v/,'IQ CSV columns');
+assert.match(csv,/# case_id=/,'IQ CSV provenance');
+assert.ok(csv.split('\n').length>125,'IQ CSV includes all 128 samples');
+
 console.log('PASS: selected-head FID interaction produced IQ frequency and Monte Carlo results');
 console.log('PASS: exported Pareto-selected physical vessel parameters for STEP CAD');
 console.log(JSON.stringify({
