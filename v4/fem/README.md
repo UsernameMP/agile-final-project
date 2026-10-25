@@ -52,3 +52,11 @@ The V4.2 website contains an illustrative RF-feed sensitivity sweep `kappa=0.5,1
 ### V4.3 model correlation gate
 
 Compare analytic no-feed reference capacitance for the baseline 0.7-mm wall case (**154.3 pF**, nominal epsLiquid=72, epsWall=3.8, electrode overlap 69 mm) against a meshed electrostatic 3-layer coaxial control case. Then turn on electrode slots, finite film thickness, wire leads and RF ports one by one; the final 3D HFSS/COMSOL result may differ drastically from the analytic value. Validate B1 phase and magnitude normalized to **accepted** RF power, both with and without vessel walls. Export complex B1 and energy density in liquid and walls, not only S11 and Q. A successful capacitance test is **necessary but insufficient** for DNP feasibility.
+
+### Published selected-case geometry
+
+[Selected under Ø90 mm, 4 J: STEP](selected_90mm_4J/GeoMesh_V4_FEM_assembly.step) ·
+[matching CAD input](selected_90mm_4J/candidate_config.json) ·
+[CAD geometry manifest](selected_90mm_4J/geometry_manifest.json).
+
+This **separate selected head** is model candidate #2332 with full envelope Ø85.255 × 97.323 mm, liquid 263.120 ml, 1350 homogenized LF turns. Its 257.64 pT/shot estimate is from an uncalibrated model, not RF FEM or actual magnetometry. Import STEP into either solver, assign actual material and feed boundary conditions, and test mesh/energy convergence before using it to choose a build. The 3D STEP geometry by itself does not supply RF port/return-current connectivity, ESR spectroscopy or an actual LNA.
