@@ -1,6 +1,6 @@
 <!doctype html><html lang="ru"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<title>GeoMesh V4.1 · Оверхаузеровский тороидальный магнитометр</title>
+<title>GeoMesh V4.2 · Overhauser FEM-ready</title>
 <meta name="description" content="Исследовательская параметрическая модель одной тороидальной головки с RF-электродами на цилиндрических стенках и общей импульсно-приёмной катушкой."/>
 <style>
 :root{color-scheme:dark;--bg:#0b1018;--panel:#111b29;--panel2:#172433;--border:#324558;--text:#e1eaf3;--muted:#96aec2;--a:#6dc5cf;--b:#e4a06a;--grid:#4a6375}
@@ -49,7 +49,7 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 </header>
 <main>
 <section class="panel"><div class="crit"><strong>Исследовательский расчёт, не паспортная чувствительность.</strong> Радиальные RF-электроды создают электрическое поле. Для симметричной квазистатической моды <i>B₁φ</i> оценивается из уравнения Ампера–Максвелла и <strong>имеет нуль в средней плоскости лишь для предположенной симметричной RF-моды</strong>. Реальная картина может меняться из-за RF-подвода, разрезов электродов и обратных токов: их влияние пока параметризовано неизвестным коэффициентом κ. Без 3D электродинамического расчёта или измерений нельзя считать этот магнитный профиль подтверждённым. Систематическая heading-ошибка и магнитная восприимчивость материалов не вычисляются. Не использовать представленные пТ для метрологической аттестации или выбора готового датчика.</div></section>
-<section class="panel"><div class="crit"><strong>Почему прежняя V4 показывала около 800 пТ?</strong> Исходная V4 использовала T₂e=55 нс совместно с ESR-полушириной 0,40 МГц, хотя для лоренцевой однородной линии они несовместимы. В V4.1 эти параметры согласованы и доступны для пересчёта; значение 800 пТ из прежнего сценария не следует считать свойством реальной головки. В предположенной RF-электродной моде загруженная RF-добротность всё ещё около 12 и степень насыщения ESR зависит от выбранного T₂e. Кроме того, выбранная симметричная RF-мода имеет нуль B₁ на середине высоты, а положительная и инвертированная DNP-намагниченности отдельных слоёв могут взаимно компенсировать FID. Все три эффекта <strong>зависят от непроверенной модели RF-подвода</strong>. В предыдущей версии 55 нс соответствовали минимальной однородной HWHM 2,89 МГц; теперь начальный сценарий T₂e=420 нс и HWHM=0,40 МГц внутренне согласован, но не измерен на нашем растворе. Поэтому абсолютные пТ и рейтинг вариантов по шуму <strong>пока физически не верифицированы</strong>. Это не измеренная чувствительность и не основание считать, что реальная головка будет иметь шум 800 пТ. Публикация Li et al. даёт <strong>1,69 пТ/√Гц</strong> для другой, экспериментально настроенной архитектуры; здесь выводятся <strong>пТ на цикл</strong>, поэтому показатели нельзя численно приравнивать.</div></section>
+<section class="panel"><div class="crit"><strong>Почему прежняя V4 показывала около 800 пТ?</strong> Исходная V4 использовала T₂e=55 нс совместно с ESR-полушириной 0,40 МГц, хотя для лоренцевой однородной линии они несовместимы. В V4.2 эти параметры согласованы и доступны для пересчёта; значение 800 пТ из прежнего сценария не следует считать свойством реальной головки. В предположенной RF-электродной моде загруженная RF-добротность всё ещё около 12 и степень насыщения ESR зависит от выбранного T₂e. Кроме того, выбранная симметричная RF-мода имеет нуль B₁ на середине высоты, а положительная и инвертированная DNP-намагниченности отдельных слоёв могут взаимно компенсировать FID. Все три эффекта <strong>зависят от непроверенной модели RF-подвода</strong>. В предыдущей версии 55 нс соответствовали минимальной однородной HWHM 2,89 МГц; теперь начальный сценарий T₂e=420 нс и HWHM=0,40 МГц внутренне согласован, но не измерен на нашем растворе. Поэтому абсолютные пТ и рейтинг вариантов по шуму <strong>пока физически не верифицированы</strong>. Это не измеренная чувствительность и не основание считать, что реальная головка будет иметь шум 800 пТ. Публикация Li et al. даёт <strong>1,69 пТ/√Гц</strong> для другой, экспериментально настроенной архитектуры; здесь выводятся <strong>пТ на цикл</strong>, поэтому показатели нельзя численно приравнивать.</div></section>
 <div class="layout" id="workspace">
 <aside class="panel">
 <h2>Ограничения и физические сценарии</h2>
@@ -105,7 +105,7 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 </div>
 <div class="plots">
 <section class="panel"><h2>Сравнение одной и двух RF-частот</h2><div id="pair"></div><p class="caption">Это две RF-программы одного и того же физического сосуда и той же общей низкочастотной катушки. При отсутствии измеренного ESR-спектра победитель зависит от гипотетических линий возбуждения.</p></section>
-<section class="panel"><h2>Контроль физической применимости</h2><div id="quality"></div></section>
+<section class="panel"><h2>Контроль физической применимости</h2><div id="quality"></div><div class="caption" id="kappaTest" style="margin-top:12px"></div></section>
 </div>
 <section class="panel"><h2>Лучшие по текущему условному сценарию (НЕ конструктивные рекомендации)</h2><div class="scroll"><table><thead><tr><th>№</th><th>RF</th><th>Ø × H, мм</th><th>Жидкость, мл</th><th>Витки</th><th>Шум, пТ</th><th>Энергия, Дж</th></tr></thead><tbody id="winners"></tbody></table></div></section>
 <section class="panel"><h2>Что именно вычислено и что ещё неизвестно</h2>
@@ -113,9 +113,9 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <div><h3>Рассчитывается явно</h3><p class="caption">Объём скруглённого кольца; реальная упаковка провода; сопротивление и идеализированная индуктивность тора; электрическая ёмкость радиальных RF-электродов; предел RF-добротности от потерь жидкости; согласующая индуктивность; RF-энергия и нагрев за цикл; низкочастотная импульсная энергия; параллельный RLC-приём; распределённый сигнал FID и расчётная нижняя граница ошибки частоты; Bloch-прецессия протонов для выбранного импульса.</p></div>
 <div><h3>Пока требует измерений или 3D-поля</h3><p class="caption">3D RF-поле с учётом вводов, обратных токов и торцевых полей (текущий расчёт — квазистатика); реальные ESR-линии выбранного радикала; T₁e и T₂e; сольватация и перенос поляризации; магнитная восприимчивость жидкости, электродов и корпуса; паразитная емкость и токи утечки; защита и восстановление реального усилителя; полный комплексный FID при 3D-карте неоднородности поля. Все пТ сейчас модельные, а не измеренные.</p></div>
 </div>
-<p><a href="FORMULAS.md">Полный реестр уравнений, источников неопределённости и проверок</a> · <a href="model.js">Исходный код</a> · <a href="README.md">Описание ревизии</a></p>
-</section></main><footer>GeoMesh V4.1 · одно тороидальное Оверхаузеровское измерительное устройство · GitHub Pages</footer>
-<script src="model.js?v=4.1.1"></script><script>
+<p><a href="fem/README.md">Постановка COMSOL/ANSYS</a> · <a href="FORMULAS.md">Полный реестр уравнений, источников неопределённости и проверок</a> · <a href="model.js">Исходный код</a> · <a href="README.md">Описание ревизии</a></p>
+</section></main><footer>GeoMesh V4.2 · одно тороидальное Оверхаузеровское измерительное устройство · GitHub Pages</footer>
+<script src="model.js?v=4.2.0"></script><script>
 (function(){
 "use strict";
 const PI=Math.PI, $=s=>document.getElementById(s), M=window.GeoMeshV4;
@@ -132,11 +132,12 @@ function packInputs(){
 function validInputs(c){
  return c.feedFactor>=.1&&c.feedFactor<=2&&c.conductivity>=0&&c.conductivity<=.2&&
  c.lossTangent>=.002&&c.lossTangent<=.3&&c.xi>=.01&&c.xi<=1&&c.T2star>=.1&&c.T2star<=8&&
-  c.t2e>=30e-9&&c.t2e<=2000e-9&&c.esrWidthMHz>=.1&&c.esrWidthMHz<=12;
+  c.t2e>=30e-9&&c.t2e<=2000e-9&&c.esrWidthMHz>=.1&&c.esrWidthMHz<=12&&
+   c.esrWidthMHz+1e-8>=1/(2*Math.PI*c.t2e*1e6);
 }
 function clear(){selected=null;dataset=[];visible=[];front=[];$('chosen').textContent='Нет рассчитанных конструкций'}
 function rebuild(){
- let c=packInputs();if(!validInputs(c)){$('status').textContent='Проверь допустимые диапазоны физических параметров';return}
+ let c=packInputs();if(!validInputs(c)){$('status').textContent='Проверь диапазоны и условие ESR: ширина ≥ 1/(2π T₂e)';return}
  $('rebuild').disabled=true;$('status').textContent='Расчёт 5 000 вариантов (одна LF-катушка × два RF-режима)…';
  setTimeout(function(){
  try{const s=performance.now(),data=M.build(c,2500,20261025);dataset=data.points;stats=data.stats;currentCfg=c;
@@ -233,7 +234,32 @@ function showSelected(){
  ['Приём после импульса','Время — гипотеза схемы'],
  ['Модель спектра радикала','Две условные ESR-линии; химия не измерена'],['Проверка ESR-параметров',p.esrWidthMHz+1e-9>=p.esrHomHWHMMHz?'Согласованы в пределах лоренцевой модели':'ОШИБКА']
  ]);
+ showKappaCheck(p);
  $('spinResults').textContent='Нажми «Проверить динамику» для интегрирования протонной прецессии именно в этой катушке.';
+}
+
+function showKappaCheck(p){
+  const target=$('kappaTest');
+  if(!target)return;
+  // Hold vessel, winding, power, duration and ESR chemistry fixed; change only
+  // the unconstrained feed/return-current coupling coefficient.
+  const b={outer:p.outer,inner:p.inner,height:p.height,fillet:p.fillet,
+    turns:p.turns,wire:p.wire,rfPower:p.rfPower,rfTime:p.rfTime,
+    pulseMT:p.pulseMT,riseMS:p.riseMS,holdMS:p.holdMS};
+  const pows=[0.5,1,2];
+  const rows=[];
+  for(const k of pows){
+    try{
+      const cfg={...M.DEF,...currentCfg,feedFactor:k};
+      const geom=M.geometry(b,cfg);
+      if(!geom){rows.push('<tr><td>'+k+'</td><td colspan="3">вне диапазона</td></tr>');continue;}
+      const re=M.estimate(b,geom,p.mode,cfg);
+      rows.push('<tr><td>'+k+'</td><td>'+fmt(re.rfB1UT,2)+'</td><td>'+fmt(re.dnpMean,1)+'</td><td>'+fmt(re.errorPT,1)+'</td></tr>');
+    }catch(e){rows.push('<tr><td>'+k+'</td><td colspan="3">'+String(e.message).replace(/</g,'&lt;')+'</td></tr>');}
+  }
+  target.innerHTML='<h3>Проверка чувствительности к RF-подводу</h3>'+
+    '<table><thead><tr><th>κ</th><th>B₁, мкТ</th><th>|DNP|, ×</th><th>Шум, пТ/цикл</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>'+
+    '<p>Это три расчётных сценария для <b>одной выбранной геометрии</b>, а не доверительный интервал. κ зависит от схемы RF-подвода и обратных токов. Нужна карта поля из FEM или измерения.</p>';
 }
 function scaleCanvas(el){const dpr=Math.min(window.devicePixelRatio||1,2),w=el.clientWidth,h=el.clientHeight;
  if(el.width!==Math.round(w*dpr)||el.height!==Math.round(h*dpr)){el.width=Math.round(w*dpr);el.height=Math.round(h*dpr)}
