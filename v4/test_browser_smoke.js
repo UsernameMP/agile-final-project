@@ -16,7 +16,7 @@ const script=html.match(/<script src="model\.js\?v=[^"]+"><\/script><script src=
 assert.ok(script,'published UI script must follow the versioned model.js script');
 new vm.Script(script[1],{filename:'index-inline.js'});
 const ids={},downloaded=[],blobs=[];
-for(const match of html.matchAll(/<(?:input|select|button|canvas|p|div|strong|tbody|section)\b[^>]*\bid="([^"]+)"[^>]*>/g)){
+for(const match of html.matchAll(/<(?:input|select|button|canvas|p|div|span|strong|tbody|section)\b[^>]*\bid="([^"]+)"[^>]*>/g)){
  const tag=match[0],id=match[1];
  const value=tag.match(/\bvalue="([^"]*)"/);
  ids[id]={
