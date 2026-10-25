@@ -1,6 +1,6 @@
 <!doctype html><html lang="ru"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<title>GeoMesh V4.2 · Overhauser FEM-ready</title>
+<title>GeoMesh V4.3 · Overhauser FEM-ready</title>
 <meta name="description" content="Исследовательская параметрическая модель одной тороидальной головки с RF-электродами на цилиндрических стенках и общей импульсно-приёмной катушкой."/>
 <style>
 :root{color-scheme:dark;--bg:#0b1018;--panel:#111b29;--panel2:#172433;--border:#324558;--text:#e1eaf3;--muted:#96aec2;--a:#6dc5cf;--b:#e4a06a;--grid:#4a6375}
@@ -44,7 +44,7 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 </style></head><body>
 <header><div class="topline">GEOMESH / RESEARCH MODEL V4.0 / 25 OCT 2026</div>
 <h1>Оверхаузеровский магнитометр · высокий тор</h1>
-<p>Одна жидкостная кольцевая полость со скруглённым прямоугольным сечением. Внутренний и наружный цилиндрические RF-электроды. Одна тороидальная катушка для низкочастотного отклонения и приёма FID. Только одна головка, без колонны.</p>
+<p>Одна жидкостная кольцевая полость со скруглённым прямоугольным сечением. Внутренний и наружный цилиндрические RF-электроды <strong>снаружи диэлектрической стенки</strong>. Одна тороидальная катушка для низкочастотного отклонения и приёма FID. Только одна головка, без колонны.</p>
 <nav><a href="#workspace">Оптимизация</a><a href="#device-panel">3D-геометрия</a><a href="#details-panel">Электрика и RF</a><a href="FORMULAS.md">Все формулы и допущения</a><a href="model.js">Расчётный JavaScript</a><a href="../v3/">Архив V3</a></nav>
 </header>
 <main>
@@ -62,7 +62,13 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <div class="field"><label for="scenario">Отображаемая ошибка</label><select id="scenario"><option value="nominal">Номинальная модель</option><option value="stress">Условный стресс-сценарий</option></select></div>
 </div>
 <hr style="border:0;border-top:1px solid var(--border);margin:19px 0"/>
-<h3>Параметры раствора и RF (для полного пересчёта)</h3>
+<h3>Параметры сосуда, раствора и RF (для полного пересчёта)</h3>
+<div class="fields" style="margin-top:10px">
+<div class="field"><label for="vesselWallMM">Толщина стенки сосуда, мм</label><input id="vesselWallMM" type="number" min=".3" max="1.2" value=".7" step=".1"/></div>
+<div class="field"><label for="vesselEpsilonR">εᵣ материала стенки</label><input id="vesselEpsilonR" type="number" min="2" max="10" value="3.8" step=".1"/></div>
+<div class="field"><label for="vesselTanDelta">tan δ стенки на RF</label><input id="vesselTanDelta" type="number" min="0" max=".03" value=".001" step=".001"/></div>
+</div>
+<p class="caption">RF-электроды лежат снаружи стенок. Две стенки и жидкость образуют <strong>последовательную коаксиальную ёмкость</strong>; изменяются ёмкость, распределение RF-напряжения, добротность, B₁ и габаритная укладка.</p>
 <div class="field"><label for="feedFactor">Коэффициент RF-токов и вводов, κ</label><input id="feedFactor" type="number" value="1" min=".1" max="2" step=".1"/></div>
 <div class="fields" style="margin-top:10px">
 <div class="field"><label for="conductivity">Электропроводность, С/м</label><input id="conductivity" type="number" min="0" max=".2" value=".004" step=".001"/></div>
@@ -114,8 +120,8 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <div><h3>Пока требует измерений или 3D-поля</h3><p class="caption">3D RF-поле с учётом вводов, обратных токов и торцевых полей (текущий расчёт — квазистатика); реальные ESR-линии выбранного радикала; T₁e и T₂e; сольватация и перенос поляризации; магнитная восприимчивость жидкости, электродов и корпуса; паразитная емкость и токи утечки; защита и восстановление реального усилителя; полный комплексный FID при 3D-карте неоднородности поля. Все пТ сейчас модельные, а не измеренные.</p></div>
 </div>
 <p><a href="fem/README.md">Постановка COMSOL/ANSYS</a> · <a href="FORMULAS.md">Полный реестр уравнений, источников неопределённости и проверок</a> · <a href="model.js">Исходный код</a> · <a href="README.md">Описание ревизии</a></p>
-</section></main><footer>GeoMesh V4.2 · одно тороидальное Оверхаузеровское измерительное устройство · GitHub Pages</footer>
-<script src="model.js?v=4.2.0"></script><script>
+</section></main><footer>GeoMesh V4.3 · одно тороидальное Оверхаузеровское измерительное устройство · GitHub Pages</footer>
+<script src="model.js?v=4.3.0"></script><script>
 (function(){
 "use strict";
 const PI=Math.PI, $=s=>document.getElementById(s), M=window.GeoMeshV4;
@@ -125,12 +131,16 @@ const fmt=(n,d=2)=>Number.isFinite(Number(n))?Number(n).toLocaleString('ru-RU',{
 const modeName=m=>m==='dual'?'Две частоты':'Одна частота';
 const errorKey=()=>scenario==='stress'?'conservativePT':'errorPT';
 function packInputs(){
- return {feedFactor:Number($('feedFactor').value),conductivity:Number($('conductivity').value),
+ return {vesselWallMM:Number($('vesselWallMM').value),vesselEpsilonR:Number($('vesselEpsilonR').value),
+ vesselTanDelta:Number($('vesselTanDelta').value),
+ feedFactor:Number($('feedFactor').value),conductivity:Number($('conductivity').value),
  lossTangent:Number($('lossTangent').value),xi:Number($('xi').value),T2star:Number($('T2star').value),
   t2e:Number($('t2eNs').value)*1e-9,esrWidthMHz:Number($('esrWidthMHz').value)};
 }
 function validInputs(c){
- return c.feedFactor>=.1&&c.feedFactor<=2&&c.conductivity>=0&&c.conductivity<=.2&&
+ return c.vesselWallMM>=.3&&c.vesselWallMM<=1.2&&
+ c.vesselEpsilonR>=2&&c.vesselEpsilonR<=10&&c.vesselTanDelta>=0&&c.vesselTanDelta<=.03&&
+ c.feedFactor>=.1&&c.feedFactor<=2&&c.conductivity>=0&&c.conductivity<=.2&&
  c.lossTangent>=.002&&c.lossTangent<=.3&&c.xi>=.01&&c.xi<=1&&c.T2star>=.1&&c.T2star<=8&&
   c.t2e>=30e-9&&c.t2e<=2000e-9&&c.esrWidthMHz>=.1&&c.esrWidthMHz<=12&&
    c.esrWidthMHz+1e-8>=1/(2*Math.PI*c.t2e*1e6);
@@ -191,7 +201,10 @@ function showSelected(){
  ['R / L низкочастотной обмотки',fmt(p.coilR,2)+' Ом / '+fmt(p.coilLMH,2)+' мГн'],
  ['LC для приёма (параллельная)',fmt(p.coilTuneUF,3)+' мкФ'],
  ['Приёмное усиление / шум',fmt(p.rxGain,2)+' / '+fmt(p.rxNoiseNV,2)+' нВ/√Гц'],
- ['RF-электроды C',fmt(p.rfCapPF,1)+' пФ'],
+ ['Толщина стенки / εᵣ стенки',fmt(p.vesselWallMM,2)+' мм / '+fmt(p.vesselEpsilonR,2)],
+  ['RF C: с двумя стенками / без стенок',fmt(p.rfCapPF,1)+' / '+fmt(p.rfCapBarePF,1)+' пФ'],
+  ['Доля RF-напряжения на жидкости',fmt(p.rfLiquidVoltageFraction*100,1)+'%'],
+  ['Доля энергии RF-моды в жидкости / стенках',fmt(p.rfLiquidEnergyShare*100,1)+' / '+fmt(p.rfWallEnergyShare*100,1)+'%'],
  ['Согласующая RF-индуктивность',fmt(p.rfIndNH,2)+' нГн'],
  ['RF Q жидкости / общий Q',fmt(p.rfQDielectric,1)+' / '+fmt(p.rfQ,1)],
  ['RF P / t',fmt(p.rfPower,2)+' Вт / '+fmt(p.rfTime,2)+' с'],
@@ -203,7 +216,7 @@ function showSelected(){
   ['Среднее насыщение ESR',fmt(p.rfESRMean*100,2)+'%'],
    ['T₂e / однородная полуширина ESR',fmt(p.t2eNS,1)+' нс / '+fmt(p.esrHomHWHMMHz,2)+' МГц'],
    ['Заданная полуширина ESR',fmt(p.esrWidthMHz,2)+' МГц'],
- ['Суммарная поглощённая RF-энергия',fmt(p.rfHeatJ,3)+' Дж'],
+ ['Потери RF в жидкости / стенках',fmt(p.rfHeatJ,3)+' / '+fmt(p.rfWallHeatingJ,4)+' Дж'],
  ['Адиабатический критерий (proxy)',fmt(p.tipRampFactor,3)],
  ['Импульс поле / ток',fmt(p.pulseMT,2)+' мТ / '+fmt(p.pulseCurrentA,3)+' А'],
  ['Время спада / мёртвое время',fmt(p.pulseOffUS,1)+' мкс / '+fmt(p.deadMS,2)+' мс'],
