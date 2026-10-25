@@ -9,7 +9,8 @@ const PI=Math.PI, MU0=4e-7*PI, EPS0=8.8541878128e-12, KB=1.380649e-23,
 const DEF=Object.freeze({
  maxOD:100,maxH:100,minBore:10,minOD:60,minH:20,
  epsilonR:72,lossTangent:0.030,conductivity:0.004,efieldShare:0.94,
- vesselWallMM:0.70,vesselEpsilonR:3.8,vesselTanDelta:0.001,electrodeCopperMM:0.05,rfStrayPF:10.0,
+ vesselWallMM:0.70,vesselEpsilonR:3.8,vesselTanDelta:0.001,electrodeCopperMM:0.05,
+ electrodeEndClearanceMM:3.0,rfStrayPF:10.0,
  qMetal:85,qCoupler:33,feedFactor:1.0,xi:0.46,leakage:0.80,
  t1e:3.0e-6,t2e:420e-9,esrHalfMHz:0.82,esrWidthMHz:0.40,
  tDNP:1.0,T2star:2.0,gradientNTM:20,ampNV:0.85,ampPA:0.08,
@@ -76,7 +77,7 @@ function geometry(b,c){
  let tauRx=2*qLoaded/(GP*c.b0);
  // Incomplete: clipping and diode recovery depend on actual LNA; this is explicitly a proxy.
  let dead=offSec+c.baseBlankS+tauRx*Math.log1p((c.pulseClamp*0.00015)/0.015);
- const hElectrode=(h-2*Math.max(1,f))/1000;
+ const hElectrode=(h-2*Math.max(c.electrodeEndClearanceMM,f))/1000; // CAD electrode axial clearance
  if(hElectrode<=0)return null;
  // Radial series dielectric: electrodes lie OUTSIDE the inner and outer vessel walls.
  // Displacement D_r is continuous through both walls and liquid in this 1D coaxial limit.
