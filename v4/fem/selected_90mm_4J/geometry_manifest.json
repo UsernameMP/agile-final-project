@@ -24,11 +24,14 @@
     "rf_nominal_input_power_w": 1,
     "nominal_earth_field_uT": 50,
     "source_case_id": 2212,
-    "source_model_version": "4.3",
+    "source_model_version": "4.5",
     "source_rf_mode": "dual",
-    "source_conditional_error_pT_per_shot": 29.884698906112902,
+    "source_conditional_error_pT_per_shot": 33.60770853414717,
+    "source_rf_architecture": "literature",
+    "source_cycle_s": 3.308462938041429,
+    "source_resolution_pt_sqrt_s": 61.129668276326065,
     "source_cycle_energy_j": 3.3093433516457003,
-    "source_status": "SCENARIO ONLY, not measured, not Maxwell FEM"
+    "source_status": "V4.5 literature-anchored scenario only; RF mode extrapolated to torus, not measured or Maxwell FEM"
   },
   "parts": [
     {
