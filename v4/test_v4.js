@@ -22,6 +22,8 @@ for(let n=0;n<a.points.length;n+=2){
  assert.ok(y.energyJ>x.energyJ);
  for(const key of ['errorPT','energyJ','rfB1UT','rfQ','rfCapPF','rfIndNH','rxNoiseNV','pulseOffUS'])assert.ok(Number.isFinite(x[key])&&x[key]>0);
  assert.equal(x.headingBiasPT,null);
+ assert.ok(Number.isFinite(x.dnpSignedMean));
+ assert.ok(x.dnpCancellation>=0&&x.dnpCancellation<=1+1e-12);
 }
 for(const p of front)for(const q of front){
  if(p.id===q.id)continue;
