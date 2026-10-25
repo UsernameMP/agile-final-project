@@ -35,9 +35,9 @@ for(const [id,v] of Object.entries({
  rfMode:'all',scenario:'nominal',fidAngle:'0',fidCycles:'16',
  rfArchitecture:'literature',rfQReference:'1278',rfSaturationPowerW:'.4',
  rfVolumeLoss:'.35',rfAxialNonuniformity:'.16',rfLiquidLossFraction:'.28',
- ampNV:'1.4',readS:'1.6',feedFactor:'1',conductivity:'.004',
+ ampNV:'1.4',readS:'1.6',feedFactor:'1',epsilonR:'7.23',conductivity:'.000003',
  vesselWallMM:'.7',vesselEpsilonR:'3.8',vesselTanDelta:'.001',
- lossTangent:'.030',xi:'.46',T2star:'2.68',t2eNs:'420',esrWidthMHz:'.4',
+ lossTangent:'.003',xi:'.46',T2star:'2.68',t2eNs:'420',esrWidthMHz:'.4',
  dMax:'100',hMax:'100',bMin:'10',eMax:'8'
 })){
  assert.ok(ids[id],'missing input '+id);
