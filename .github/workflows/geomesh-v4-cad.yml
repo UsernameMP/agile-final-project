@@ -1,0 +1,49 @@
+name: GeoMesh V4 FEM CAD
+on:
+  workflow_dispatch:
+  push:
+    branches: [gh-pages]
+    paths:
+      - v4/fem/build_cad.py
+      - .github/workflows/geomesh-v4-cad.yml
+permissions:
+  contents: write
+jobs:
+  build-cad:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install CadQuery
+        run: python -m pip install 'cadquery>=2.5,<2.7'
+      - name: Export multi-part STEP geometry
+        run: python v4/fem/build_cad.py --out v4/fem/generated
+      - name: Sanity check files
+        run: |
+          test -s v4/fem/generated/GeoMesh_V4_FEM_assembly.step
+          python - <<'PY'
+          import json
+          m=json.load(open('v4/fem/generated/geometry_manifest.json'))
+          assert len(m['parts'])==7
+          assert abs(m['liquid_volume_ml']-211.721)<0.01
+          assert m['full_outer_d_mm']<100
+          assert m['full_h_mm']<100
+          print(m['liquid_volume_ml'],m['full_outer_d_mm'],m['full_h_mm'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GeoMesh-V4-FEM-STEP
+          path: v4/fem/generated/
+      - name: Commit generated STEP to gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add v4/fem/generated/
+          if ! git diff --cached --quiet; then
+            git commit -m "Build V4 FEM CAD STEP assembly"
+            git push origin gh-pages
+          fi
