@@ -118,3 +118,16 @@ The V4.0–4.2 circuit incorrectly modeled an RF capacitor directly across the l
 With the representative Ø70/36 × H75 mm liquid and 0.7 mm walls (electrode end clearance 3 mm), the ideal-coaxial capacitance changes **415.6 pF → 154.3 pF**, and the nominal calculated B1 at 0.5 W **2.04 µT → 1.48 µT**, while Q increases due to reduced liquid participation. These are **analytic screening numbers**, not RF FEM.
 
 GitHub Actions check both model physics and the UI at Ø90 mm. Current regression reports **5,000 scenarios, 263 Pareto points, and 257.6 pT/shot minimum conditional frequency error**. This is not measured sensor noise or proof that this topology cannot reach a few pT. Actual RF feed and liquid-specific ESR parameters remain the dominant unknowns. Full [derivation](FORMULAS.md).
+
+## Exported selected single-head STEP (V4.3)
+
+The research-screened candidate with minimum conditional sigma under package OD ≤90 mm, full height ≤100 mm and cycle energy ≤4 J was built by GitHub Actions as a **real CAD STEP solid assembly**, with the same geometry parameters as the live model:
+
+- Case **#2332**, liquid OD **73.091 mm**, liquid ID **37.184 mm**, liquid height **85.159 mm**, corner radius **3.399 mm**;
+- Common LF winding **1350 turns**, 0.45 mm conductor, computed winding build **4.032 mm**;
+- Full assembly diameter **85.255 mm**, full height **97.323 mm**, free bore **25.020 mm**;
+- Liquid volume **263.120 ml**;
+- Conditional frequency error **257.64 pT/shot**, cycle energy **3.322 J** (uncalibrated scenario).
+
+Files: [3D STEP](fem/selected_90mm_4J/GeoMesh_V4_FEM_assembly.step), [JSON input](fem/selected_90mm_4J/candidate_config.json), [CAD manifest](fem/selected_90mm_4J/geometry_manifest.json).
+You can download any chosen case from the viewer as a CAD JSON, then invoke `python v4/fem/build_cad.py --config selected.json --out output`. The selected assembly has **seven CAD solids**, not 1350 explicit copper wire turns. No COMSOL/ANSYS Maxwell field calculation has been executed, and this case is not necessarily physically optimal.
