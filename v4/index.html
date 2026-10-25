@@ -58,7 +58,8 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <div class="slider"><div class="row"><span>Полный наружный Ø, мм</span><strong id="dMaxVal">100</strong></div><input type="range" id="dMax" min="60" max="100" value="100" step="1"/></div>
 <div class="slider"><div class="row"><span>Полная высота, мм</span><strong id="hMaxVal">100</strong></div><input type="range" id="hMax" min="60" max="100" value="100" step="1"/></div>
 <div class="slider"><div class="row"><span>Минимальный свободный канал, мм</span><strong id="bMinVal">10</strong></div><input type="range" id="bMin" min="10" max="40" value="10" step="1"/></div>
-<div class="slider"><div class="row"><span>Энергия за измерение, Дж</span><strong id="eMaxVal">8.0</strong></div><input type="range" id="eMax" min=".5" max="8" value="8" step=".1"/></div>
+<div class="slider"><div class="row"><span>Среднее RF-тепло в жидкости, Вт</span><strong id="heatMaxVal">0.60</strong></div><input type="range" id="heatMax" min=".05" max=".60" value=".60" step=".01"/></div>
+ <div class="slider"><div class="row"><span>Энергия за измерение, Дж</span><strong id="eMaxVal">8.0</strong></div><input type="range" id="eMax" min=".5" max="8" value="8" step=".1"/></div>
 <div class="fields">
 <div class="field"><label for="rfMode">RF-режим</label><select id="rfMode"><option value="all">Сравнить оба</option><option value="single">Одна частота</option><option value="dual">Две частоты</option></select></div>
 <div class="field"><label for="objective">Цель оптимизации</label><select id="objective">
@@ -115,7 +116,7 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 </div>
 <canvas id="plot" aria-label="Вращаемое трёхмерное облако решений Парето"></canvas>
 <p class="caption">Оси: X — энергия (Дж), Y — шум на измерение (пТ), Z — габаритный объём без пустого канала (см³). Поверните пальцем. Нажмите точку для просмотра. Бирюзовые точки — один RF-тон, оранжевые — два. Крупные точки — фронт Парето.</p>
-<p class="caption">Оптимизируются только случайная ошибка, энергия и габаритный объём. Систематическая ошибка направления не подменяется неравномерностью амплитуды.</p>
+<p class="caption">Оптимизируются только случайная ошибка, энергия и габаритный объём. Систематическая ошибка направления не подменяется неравномерностью амплитуды. Тепловой фильтр ограничивает <strong>среднюю оценочную RF-мощность, поглощаемую жидкостью</strong>, не стационарную температуру корпуса.</p>
 </section></div>
 <div class="plots">
 <section class="panel" id="device-panel"><h2>Выбранная головка · 3D</h2>
@@ -211,9 +212,9 @@ function rebuild(){
 function applyFilters(reset){
  if(!dataset.length)return;
  const d=Number($('dMax').value),h=Number($('hMax').value),
- bore=Number($('bMin').value),en=Number($('eMax').value),mode=$('rfMode').value;
+ bore=Number($('bMin').value),en=Number($('eMax').value),maxHeat=Number($('heatMax').value),mode=$('rfMode').value;
  scenario=$('scenario').value;
- visible=dataset.filter(p=>p.od<=d&&p.hh<=h&&p.bore>=bore&&p.energyJ<=en&&(mode==='all'||p.mode===mode));
+ visible=dataset.filter(p=>p.od<=d&&p.hh<=h&&p.bore>=bore&&p.energyJ<=en&&p.thermalMeanW<=maxHeat&&(mode==='all'||p.mode===mode));
  front=M.pareto(visible,scenario==='stress',$('objective').value);
  const key=errorKey();
  $('besterrorunit').textContent=$('objective').value==='time'?'Расчётный шум, пТ/√Гц':'Расчётная ошибка, пТ/цикл';
@@ -447,8 +448,8 @@ function drag(canvas,setFn){
 }
 drag($('plot'),(dx,dy)=>{yaw+=dx*.009;pitch=Math.max(-1.35,Math.min(1.35,pitch+dy*.006));drawPlot()});
 drag($('device'),(dx,dy)=>{deviceYaw+=dx*.009;devicePitch=Math.max(-1.3,Math.min(1.3,devicePitch+dy*.006));drawDevice()});
-['dMax','hMax','bMin','eMax'].forEach(id=>$(id).addEventListener('input',()=>{
- $(id+'Val').textContent=id==='eMax'?Number($(id).value).toFixed(1):$(id).value;applyFilters(false)}));
+['dMax','hMax','bMin','eMax','heatMax'].forEach(id=>$(id).addEventListener('input',()=>{
+ $(id+'Val').textContent=id==='eMax'?Number($(id).value).toFixed(1):id==='heatMax'?Number($(id).value).toFixed(2):$(id).value;applyFilters(false)}));
 ['rfMode','scenario','objective'].forEach(id=>$(id).addEventListener('change',()=>applyFilters(false)));
 $('rebuild').onclick=rebuild;
 $('spinTest').onclick=()=>{
