@@ -342,5 +342,5 @@ function validate(){
  return {ok:true,checks:8,fixture:{volumeML:g.volume,od:g.od,h:g.hh,bore:g.bore,
   qLoaded:g.qLoad,capPF:g.capPF,rfIndNH:g.rfLNH,singlePT:s1.errorPT,dualPT:s2.errorPT}};
 }
-root.GeoMeshV4={DEF,build,pareto,validate,geometry,estimate,blochPulse,makeBase,RNG};
+root.GeoMeshV4={DEF,build,pareto,validate,geometry,estimate,blochPulse,makeBase,RNG,precompute,ePolar,roundingH};
 })(typeof window!=='undefined'?window:globalThis);
