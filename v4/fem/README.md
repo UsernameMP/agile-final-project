@@ -4,7 +4,7 @@
 
 ## 0. Prepared model files
 
-- `build_cad.py` — CadQuery Python script generating a *real, parametric 3D assembly*, not just a picture. Run `python build_cad.py --out generated`. Requires `cadquery`.
+- [Solver-agnostic study input](solver_config.json) — explicit JSON parameter values, frequency and transient sweeps, outputs and mesh-validation gates; neither a native `.mph` nor `.aedt` file.\n- `build_cad.py` — CadQuery Python script generating a *real, parametric 3D assembly*, not just a picture. Run `python build_cad.py --out generated`. Requires `cadquery`.
 - `generated/GeoMesh_V4_FEM_assembly.step` — tested CAD STEP assembly with named 3D parts: liquid, vessel, two azimuthally slotted RF electrodes, insulating shell, **homogenized** LF winding envelope, epoxy. The LF winding envelope is **not** 900 separate wires: use the multi-turn / stranded-coil physics of the solver.
 - `generated/geometry_manifest.json` — part volumes and sizes.
 
