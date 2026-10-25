@@ -1,0 +1,44 @@
+---
+- name: Verify GeoMesh V4.1 model and browser interaction
+  hosts: geomesh_verify
+  gather_facts: false
+  vars:
+    geomesh_repo_url: "https://github.com/UsernameMP/agile-final-project.git"
+    geomesh_repo_ref: "gh-pages"
+    geomesh_checkout_dir: "/tmp/geomesh-v4-verification"
+  tasks:
+    - name: Check git is installed
+      ansible.builtin.command: git --version
+      changed_when: false
+
+    - name: Check Node.js is installed
+      ansible.builtin.command: node --version
+      changed_when: false
+
+    - name: Fetch only the public GitHub Pages repository
+      ansible.builtin.git:
+        repo: "{{ geomesh_repo_url }}"
+        dest: "{{ geomesh_checkout_dir }}"
+        version: "{{ geomesh_repo_ref }}"
+        depth: 1
+        update: true
+
+    - name: Run physics-scenario regression (5000 variants)
+      ansible.builtin.command:
+        cmd: node v4/test_v4.js
+        chdir: "{{ geomesh_checkout_dir }}"
+      changed_when: false
+      register: geomesh_model_test
+
+    - name: Run browser-like regression (90 mm and invalid ESR)
+      ansible.builtin.command:
+        cmd: node v4/test_browser_smoke.js
+        chdir: "{{ geomesh_checkout_dir }}"
+      changed_when: false
+      register: geomesh_browser_test
+
+    - name: Print verification status
+      ansible.builtin.debug:
+        msg:
+          - "{{ geomesh_model_test.stdout }}"
+          - "{{ geomesh_browser_test.stdout }}"
