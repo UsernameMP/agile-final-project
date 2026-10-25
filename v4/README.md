@@ -1,6 +1,6 @@
-# GeoMesh Overhauser V4.0 — single high-toroid head
+# GeoMesh Overhauser V4.1 — single high-toroid head
 
-[Open V4 on GitHub Pages](https://usernamemp.github.io/agile-final-project/v4/)
+[Open V4 on GitHub Pages](https://usernamemp.github.io/agile-final-project/v4/?rev=4.1.1)
 
 ## Architecture locked for V4
 
@@ -42,9 +42,9 @@ No Python runtime or backend is required to use the published website; it comput
 |---|---:|
 | Generated variants | 5,000 |
 | Independent candidate vessels | 2,500 |
-| 3D Pareto points (unfiltered) | 203 |
-| Of those: single / dual RF | 124 / 79 |
-| Smallest conditional frequency-error noise | ~826 pT/shot |
+| 3D Pareto points (unfiltered) | 233 |
+| Of those: single / dual RF | 109 / 124 |
+| Smallest conditional frequency-error noise | ~124 pT/shot |
 | Minimum energy among all candidates | ~0.366 J/shot |
 
 The absolute values **must not be compared** with Li et al.'s 1.69 pT/√Hz without matched bandwidth/time and validated electron-radical and RF parameters. The large modeled noise is *not proof that the hardware will have this noise*: it illustrates how strongly the unverified RF electrode mode and DNP gain govern the forecast. **Critical parameter inconsistency:** `T2e=55 ns` requires homogeneous ESR HWHM ≥2.89 MHz, while V4 assumes 0.40 MHz; therefore the listed pT and Pareto noise rankings are not physically calibrated. The new viewer shows signed DNP polarization and spatial cancellation diagnostics. Read FORMULAS.md audit appendix.
@@ -63,3 +63,40 @@ No claim of verified sensitivity or metrological absolute accuracy is made.
 ## Prior revisions
 
 [V3](../v3/) remains accessible. This V4 uses a **fixed single-coil toroid** rather than randomizing among physically different LF winding topologies.
+
+## V4.1 errata and parameter consistency (2026-10-25)
+
+The earlier V4.0 nominal RF/ESR assumptions used `T2e=55 ns` with a hypothetical Lorentzian ESR HWHM of `0.40 MHz`. These values cannot both describe one homogeneous ESR line: `Γ_HWHM >= 1 / (2π T2e)`; at 55 ns the lower bound is 2.89 MHz.
+
+**V4.1 defaults are `T2e=420 ns` and ESR HWHM `0.40 MHz`** (minimum 0.379 MHz), an internally consistent **hypothetical example**, **not** measured radical parameters. Both values are user-editable. The model explicitly rejects inconsistent combinations on rebuild.
+
+The large shift ~826 → ~124 pT/shot is a **sensitivity-to-assumptions demonstration, not an observed increase in magnetometer performance**. Loaded resonator RF Q is still approximately 11.6 in this scenario, and the idealized symmetric electrode current-return geometry may not represent the eventual hardware. A full 3D complex RF field and measured radical ESR/relaxation are essential. Literature's 1.69 pT/√Hz is not numerically equivalent to predicted pT/shot.
+
+Previous browser bug `PI is not defined` has been addressed by defining `PI` in the page code and versioning `model.js?v=4.1.1`. A browser simulation tests: initial 5,000, diameter 90 mm → 4,924, press Recalculate → 4,924, and inconsistent ESR → clear message.
+
+## Reproducible execution, GitHub Actions and Ansible
+
+All regressions on a local machine with Node.js 22:
+
+```bash
+bash v4/run-tests.sh
+```
+
+Run directly:
+
+```bash
+node v4/test_v4.js
+node v4/test_browser_smoke.js
+```
+
+Each push that changes `v4/**` runs [GeoMesh V4 regression](../../.github/workflows/geomesh-v4-regression.yml) via GitHub Actions (no VPS needed).
+
+To run the *same checks*, not a field solver, through Ansible:
+
+```bash
+ansible-playbook -i v4/ansible/inventory.example.ini v4/ansible/verify.yml
+```
+
+The inventory targets **localhost**; change it explicitly to an authorized machine only if remote execution is intended. The playbook uses a public read-only clone in `/tmp/geomesh-v4-verification` and checks that `git` and `node` are installed. No private repository, VPS credentials, or GeoMesh column-specific code is involved.
+
+**Scope reminder:** these are software regression checks. They do not validate spin physics or measured pT sensitivity.
