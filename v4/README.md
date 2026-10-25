@@ -1,6 +1,6 @@
-# GeoMesh Overhauser V4.1 — single high-toroid head
+# GeoMesh Overhauser V4.2 — single high-toroid head
 
-[Open V4 on GitHub Pages](https://usernamemp.github.io/agile-final-project/v4/?rev=4.1.1)
+[Open V4 on GitHub Pages](https://usernamemp.github.io/agile-final-project/v4/?rev=4.2.0)
 
 ## Architecture locked for V4
 
@@ -47,7 +47,7 @@ No Python runtime or backend is required to use the published website; it comput
 | Smallest conditional frequency-error noise | ~124 pT/shot |
 | Minimum energy among all candidates | ~0.366 J/shot |
 
-The absolute values **must not be compared** with Li et al.'s 1.69 pT/√Hz without matched bandwidth/time and validated electron-radical and RF parameters. The large modeled noise is *not proof that the hardware will have this noise*: it illustrates how strongly the unverified RF electrode mode and DNP gain govern the forecast. **Critical parameter inconsistency:** `T2e=55 ns` requires homogeneous ESR HWHM ≥2.89 MHz, while V4 assumes 0.40 MHz; therefore the listed pT and Pareto noise rankings are not physically calibrated. The new viewer shows signed DNP polarization and spatial cancellation diagnostics. Read FORMULAS.md audit appendix.
+The absolute values **must not be compared** with Li et al.'s 1.69 pT/√Hz without matched bandwidth/time and validated electron-radical and RF parameters. The large modeled noise is *not proof that the hardware will have this noise*: it illustrates how strongly the unverified RF electrode mode and DNP gain govern the forecast. **Critical parameter inconsistency:** `T2e=55 ns` requires homogeneous ESR HWHM ≥2.89 MHz, while V4 assumes 0.40 MHz; therefore the listed pT and Pareto noise rankings are not physically calibrated. The V4.2 viewer shows signed DNP polarization and spatial cancellation diagnostics. Read FORMULAS.md audit appendix.
 
 ## Critical unfinished physics
 
@@ -100,3 +100,13 @@ ansible-playbook -i v4/ansible/inventory.example.ini v4/ansible/verify.yml
 The inventory targets **localhost**; change it explicitly to an authorized machine only if remote execution is intended. The playbook uses a public read-only clone in `/tmp/geomesh-v4-verification` and checks that `git` and `node` are installed. No private repository, VPS credentials, or GeoMesh column-specific code is involved.
 
 **Scope reminder:** these are software regression checks. They do not validate spin physics or measured pT sensitivity.
+
+
+## FEM handoff (V4.2)
+
+- [3D STEP assembly](fem/generated/GeoMesh_V4_FEM_assembly.step) with separate named solids for liquid, vessel, slotted RF electrodes, effective LF winding and encapsulation.
+- [Geometry manifest](fem/generated/geometry_manifest.json) and [CadQuery source](fem/build_cad.py).
+- [Machine-readable solver study specification](fem/solver_config.json): RF (COMSOL RF / ANSYS HFSS), LF and static susceptibility (COMSOL AC/DC / ANSYS Maxwell).
+- [FEM setup guidance](fem/README.md) including port topology, results required for the optimizer and verification gates.
+
+The CAD export was generated and checked by GitHub Actions, but **no COMSOL/ANSYS model has been solved**: no software license or physically defined RF feeds were available in this environment. The STEP baseline is an illustrative candidate, **not** the selected Pareto optimum.
