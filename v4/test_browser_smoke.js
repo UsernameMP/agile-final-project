@@ -10,8 +10,9 @@ const path=require('node:path');
 const root=__dirname;
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const model=fs.readFileSync(path.join(root,'model.js'),'utf8');
+const fid=fs.readFileSync(path.join(root,'fid.js'),'utf8');
 assert.match(html,/const PI=Math\.PI/,'canvas and geometry must define PI locally');
-const script=html.match(/<script src="model\.js\?v=[^"]+"><\/script><script>([\s\S]*?)<\/script>/);
+const script=html.match(/<script src="model\.js\?v=[^"]+"><\/script><script src="fid\.js\?v=[^"]+"><\/script><script>([\s\S]*?)<\/script>/);
 assert.ok(script,'published UI script must follow the versioned model.js script');
 new vm.Script(script[1],{filename:'index-inline.js'});
 const ids={},downloaded=[],blobs=[];
@@ -31,7 +32,7 @@ for(const match of html.matchAll(/<(?:input|select|button|canvas|p|div|strong|tb
  };
 }
 for(const [id,v] of Object.entries({
- rfMode:'all',scenario:'nominal',feedFactor:'1',conductivity:'.004',
+ rfMode:'all',scenario:'nominal',fidAngle:'0',fidCycles:'16',feedFactor:'1',conductivity:'.004',
  vesselWallMM:'.7',vesselEpsilonR:'3.8',vesselTanDelta:'.001',
  lossTangent:'.030',xi:'.46',T2star:'2',t2eNs:'420',esrWidthMHz:'.4',
  dMax:'100',hMax:'100',bMin:'10',eMax:'8'
@@ -53,6 +54,8 @@ const ctx={
 vm.createContext(ctx);
 vm.runInContext(model,ctx,{filename:'model.js',timeout:25000});
 assert.ok(window.GeoMeshV4,'model exports GeoMeshV4');
+vm.runInContext(fid,ctx,{filename:'fid.js',timeout:25000});
+assert.ok(window.GeoMeshV4FID,'FID module exported');
 vm.runInContext(script[1],ctx,{filename:'index-inline.js',timeout:45000});
 assert.match(ids.status.textContent,/Готово:/);
 assert.equal(ids.count.textContent.replace(/\s/g,''),'5000');
@@ -88,6 +91,9 @@ const buildup=cad.vessel_wall_mm+cad.copper_electrode_thickness_mm+
  cad.rf_insulation_mm+cad.winding_envelope_mm+cad.epoxy_mm;
 assert.ok(cad.outer_liquid_d_mm+2*buildup<=90+1e-8,'selected CAD fits filtered diameter');
 assert.ok(cad.liquid_height_mm+2*buildup<=100+1e-8,'selected CAD fits height');
+ids.fidRun.onclick();
+assert.match(ids.fidResults.textContent,/Модельный FID:/,'FID selected-case button performs actual computation');
+console.log('PASS: selected-head FID interaction produced IQ frequency and Monte Carlo results');
 console.log('PASS: exported Pareto-selected physical vessel parameters for STEP CAD');
 console.log(JSON.stringify({
  status:'pass',revision:'V4.3',defaultCount:5000,filteredCount90:count90,
