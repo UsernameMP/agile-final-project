@@ -1,6 +1,24 @@
-# GeoMesh Overhauser V4.4 — single high-toroid head
+# GeoMesh Overhauser V4.5 — literature-anchored MVP for one toroidal head
 
-[Open V4 on GitHub Pages](https://usernamemp.github.io/agile-final-project/v4/?rev=4.4.0)
+[Open V4 on GitHub Pages](https://usernamemp.github.io/agile-final-project/v4/?rev=4.5.0)
+
+## V4.5 (2026-10-25) — CURRENT DEFAULT
+
+**This revision replaces the V4.3 default RF prediction with a literature-anchored, explicitly provisional coaxial-resonator scenario.** Values in older V4.0–V4.4 sections below are historical and *do not* describe the current default Pareto forecast.
+
+- Gong et al. [JOM-4S](https://doi.org/10.3390/s21227698): RF frequency 58.8 MHz, Q=1278, liquid 175 mL, 700 turns × 0.53 mm, 22 Ω, 35 mH, measured FID decay 2.68 s, amplifier noise 1.4 nV/√Hz and 0.1 pA/√Hz, RF power 1 W in reported characterization.
+- Gong et al. [2025 noise optimization](https://doi.org/10.3390/s25247491): 1400 turns × 0.54 mm, 22.5 Ω, 33.5 mH, nonmonotone SNR(N) with a scenario optimum near 1500 turns.
+- Gong et al. [2026 pulse](https://doi.org/10.3390/s26082347): Q≈1500, low-frequency pulse 3 mT / 3 ms in a fast-cycle geometry. NOT evidence that the same current/turn count applies to toroidal LF winding.
+- [Diglyme solvent properties](https://chem.libretexts.org/Ancillary_Materials/Reference/Reference_Tables/Solvents/S1%3A_Solvent_Properties): εᵣ≈7.23, density ≈944 kg/m³, cₚ≈2035 J/(kg K), replacing the old water-like properties.
+- Source-to-parameter audit, **measured versus inferred**, and 10 design references: [LITERATURE_PARAMETERS.md](LITERATURE_PARAMETERS.md).
+
+**RF topology toggle:** `literature` is a fitted high-Q coaxial EM-mode transfer *hypothesis for the toroidal head*, using a measured reference Q and an inferred saturation/volume law. `radial` retains the idealized current-return/symmetric-capacitor control model. Their RF fields, dielectric loading and meanings of capacitance/Q **must not be combined**. Neither option replaces a 3D electromagnetic field solution with real feed paths.
+
+**Not directly measured:** RF saturation half-power 0.40 W, Q-volume penalty 0.35, B1 spatial nonuniformity, absorbed RF heat fraction 0.28, liquid loss tangent and radical relaxation. All are changeable in the viewer. Replacing these with the first prototype's data is a core MVP milestone.
+
+**Optimization:** The viewer now distinguishes conditional error `pT/shot` from `pT/√Hz` time-normalized equivalent, computed as `σshot×√Tcycle` assuming independent cycles. The old randomized set is regenerated under new source ranges for turns, wire diameter and liquid properties, so old case IDs/Pareto counts must not be compared directly.
+
+**CAD:** The checked selected-case STEP from the current solver scenario is [selected_90mm_4J/](fem/selected_90mm_4J/) and is automatically regenerated when `model.js` or CAD scripts change. STEP is geometry only, not a verified RF mode. Old case #2332 in historical V4.3 prose below is not the active V4.5 selection.
 
 ## Architecture locked for V4
 
