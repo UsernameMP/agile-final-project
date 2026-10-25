@@ -10,7 +10,7 @@ const DEF=Object.freeze({
  maxOD:100,maxH:100,minBore:10,minOD:60,minH:20,
  epsilonR:72,lossTangent:0.030,conductivity:0.004,efieldShare:0.94,
  qMetal:85,qCoupler:33,feedFactor:1.0,xi:0.46,leakage:0.80,
- t1e:3.0e-6,t2e:55e-9,esrHalfMHz:0.82,esrWidthMHz:0.40,
+ t1e:3.0e-6,t2e:420e-9,esrHalfMHz:0.82,esrWidthMHz:0.40,
  tDNP:1.0,T2star:2.0,gradientNTM:20,ampNV:0.85,ampPA:0.08,
  b0:B0,T:293.15,protonDensity:6.68e28,rfEfficiency:0.55,
  contW:0.055,rfOverheadDual:0.035,readS:1.6,rxLoad:100000,
@@ -208,7 +208,7 @@ function estimate(b,g,mode,c,detail=false){
   od:g.od,hh:g.hh,bore:g.bore,volume:g.volume,envelope:g.eenv,
   errorPT:worst,conservativePT:worst*robustScale,energyJ:shotJ,
   angleRatio:amin/Math.max(amax,1e-30),worstTheta,ampUV:amin*1e6,
-  rfQ:g.qLoad,rfQDielectric:g.qDie,rfCapPF:g.capPF,rfIndNH:g.rfLNH,rfB1UT:pre.b1UT,rfDriveVrms:pre.vrms,
+  rfQ:g.qLoad,rfQDielectric:g.qDie,rfCapPF:g.capPF,rfIndNH:g.rfLNH,rfB1UT:pre.b1UT,rfDriveVrms:pre.vrms,esrWidthMHz:c.esrWidthMHz,t2eNS:c.t2e*1e9,esrHomHWHMMHz:1/(2*PI*c.t2e*1e6),
   rfHeatJ:heatJ,deltaTmK:deltaT*1000,rfESRMean:meanSat/Math.max(wn,1e-30),
   dnpMean:meanEps/Math.max(wn,1e-30),dnpSignedMean:signedEps/Math.max(wn,1e-30),dnpCancellation:Math.abs(signedEps)/Math.max(meanEps,1e-30),coilR:g.R,coilLMH:g.L*1000,coilLayers:g.layers,
   rxGain:g.gain,rxNoiseNV:g.noise*1e9,coilLengthM:g.length,
@@ -219,6 +219,11 @@ function estimate(b,g,mode,c,detail=false){
 }
 function build(cIn,nBase=2500,seed=20261025,progress){
  let c=Object.assign({},DEF,cIn||{}),r=RNG(seed),out=[],tries=0,reasons={};
+ // In the Lorentzian homogeneous ESR model, observed HWHM ≥ 1/(2π*T2e).
+ // Inhomogeneous and hyperfine broadening may make an observed line wider.
+ const homogeneousHWHMMHz=1/(2*Math.PI*c.t2e*1e6);
+ if(!(c.t2e>0&&c.esrWidthMHz>0&&c.esrWidthMHz+1e-8>=homogeneousHWHMMHz))
+  throw Error('Несогласованность ESR: при T₂e='+Math.round(c.t2e*1e9)+' нс полуширина ESR должна быть не меньше '+homogeneousHWHMMHz.toFixed(2)+' МГц. Измени T₂e или ширину ESR.');
  while(out.length<2*nBase &&tries<nBase*350){
   tries++;
   let b=makeBase(r),g=geometry(b,c);
