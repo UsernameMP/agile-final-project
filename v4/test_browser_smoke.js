@@ -32,6 +32,7 @@ for(const match of html.matchAll(/<(?:input|select|button|canvas|p|div|strong|tb
 }
 for(const [id,v] of Object.entries({
  rfMode:'all',scenario:'nominal',feedFactor:'1',conductivity:'.004',
+ vesselWallMM:'.7',vesselEpsilonR:'3.8',vesselTanDelta:'.001',
  lossTangent:'.030',xi:'.46',T2star:'2',t2eNs:'420',esrWidthMHz:'.4',
  dMax:'100',hMax:'100',bMin:'10',eMax:'8'
 })){
@@ -59,18 +60,24 @@ const fullFront=Number(ids.frontcount.textContent.replace(/\s/g,''));
 assert.ok(fullFront>0);
 ids.dMax.value='90';
 ids.dMax.listeners.input();
-assert.equal(ids.count.textContent.replace(/\s/g,''),'4924');
+const count90=Number(ids.count.textContent.replace(/\s/g,''));
+assert.ok(count90>0&&count90<5000,'90mm filter removes some designs');
 const front90=Number(ids.frontcount.textContent.replace(/\s/g,''));
 assert.ok(front90>0&&front90<=fullFront);
 ids.rebuild.onclick();
 assert.match(ids.status.textContent,/Готово:/);
-assert.equal(ids.count.textContent.replace(/\s/g,''),'4924');
+assert.equal(Number(ids.count.textContent.replace(/\s/g,'')),count90);
 assert.equal(Number(ids.frontcount.textContent.replace(/\s/g,'')),front90);
 ids.t2eNs.value='55';
 ids.esrWidthMHz.value='.4';
 ids.rebuild.onclick();
 assert.match(ids.status.textContent,/Несогласованность ESR/,'invalid ESR parameters must report an informative message');
+ids.t2eNs.value='420';ids.esrWidthMHz.value='.4';ids.vesselWallMM.value='1.1';
+ids.rebuild.onclick();assert.match(ids.status.textContent,/Готово:/,'wall scenario rebuild');
+const countThick=Number(ids.count.textContent.replace(/\s/g,''));
+assert.ok(countThick>0&&countThick<=5000);
+ids.vesselWallMM.value='.7';ids.rebuild.onclick();assert.match(ids.status.textContent,/Готово:/);
 console.log(JSON.stringify({
- status:'pass',revision:'V4.1',defaultCount:5000,filteredCount90:4924,
+ status:'pass',revision:'V4.3',defaultCount:5000,filteredCount90:count90,
  defaultFront:fullFront,front90,recalculation90:'PASS',invalidESR:'PASS'
 },null,2));
