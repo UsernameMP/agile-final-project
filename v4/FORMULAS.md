@@ -46,7 +46,7 @@ d(r)=\min(r-r_i,r_o-r).
 
 \[
 n_j=\left\lfloor 0.92\,\frac{2\pi(r_i-\delta_j)}{p}\right\rfloor,\quad
-\delta_j=t_{\rm RF}+p(j+1/2).
+\delta_j=t_{\rm wall}+t_{\rm electrode}+t_{\rm RF}+p(j+1/2).
 \]
 
 Количество витков \(N\) распределяется послойно с проверкой фактического доступного места; невозможная укладка отклоняется.
