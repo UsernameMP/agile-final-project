@@ -42,8 +42,8 @@ No Python runtime or backend is required to use the published website; it comput
 |---|---:|
 | Generated variants | 5,000 |
 | Independent candidate vessels | 2,500 |
-| 3D Pareto points (unfiltered) | 273 |
-| Of those: single / dual RF | 146 / 127 |
+| 3D Pareto points (unfiltered) | 263 |
+| Of those: single / dual RF | 143 / 120 |
 | Smallest conditional frequency-error noise | ~258 pT/shot |
 | Minimum energy among all candidates | ~0.366 J/shot |
 
@@ -117,4 +117,4 @@ The V4.0–4.2 circuit incorrectly modeled an RF capacitor directly across the l
 
 With the representative Ø70/36 × H75 mm liquid and 0.7 mm walls (electrode end clearance 3 mm), the ideal-coaxial capacitance changes **415.6 pF → 154.3 pF**, and the nominal calculated B1 at 0.5 W **2.04 µT → 1.48 µT**, while Q increases due to reduced liquid participation. These are **analytic screening numbers**, not RF FEM.
 
-GitHub Actions check both model physics and the UI at Ø90 mm. Current regression reports **5,000 scenarios, 273 Pareto points, and 257.6 pT/shot minimum conditional frequency error**. This is not measured sensor noise or proof that this topology cannot reach a few pT. Actual RF feed and liquid-specific ESR parameters remain the dominant unknowns. Full [derivation](FORMULAS.md).
+GitHub Actions check both model physics and the UI at Ø90 mm. Current regression reports **5,000 scenarios, 263 Pareto points, and 257.6 pT/shot minimum conditional frequency error**. This is not measured sensor noise or proof that this topology cannot reach a few pT. Actual RF feed and liquid-specific ESR parameters remain the dominant unknowns. Full [derivation](FORMULAS.md).
