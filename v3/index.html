@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GeoMesh · Overhauser V3 · парные конструкции и 3D Парето</title>
+<style>
+:root{color-scheme:dark;--bg:#0b131b;--panel:#13202b;--line:#294354;--txt:#edf4f7;--mut:#9eb5c4;--cyan:#7bd5d4;--orange:#eeb785;--red:#f08683}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.5 system-ui,-apple-system,Arial,sans-serif}header{padding:18px 21px;background:linear-gradient(110deg,#20384a,#111b26);border-bottom:1px solid var(--line)}h1{font-size:21px;line-height:1.35;margin:0 0 5px}h2{font-size:15px;margin:0 0 9px}h3{font-size:14px;margin:12px 0 7px}p{margin:5px 0 9px}.lead{color:#b8ccd7;font-size:13px;max-width:1050px}.warn{color:#f2d2aa;border-left:3px solid #ca8e45;background:#2c271f;padding:10px 12px;margin:11px 0;border-radius:5px;font-size:12px}
+.wrap{display:grid;grid-template-columns:272px minmax(0,1fr);gap:14px;max-width:1660px;margin:15px auto;padding:0 14px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:14px;margin-bottom:12px}.side{align-self:start;position:sticky;top:12px;max-height:calc(100vh - 20px);overflow:auto}.control{padding:8px 0;border-bottom:1px solid #273746}.control label{display:flex;justify-content:space-between;gap:9px;font-size:13px}output{color:var(--cyan);font-weight:650}input[type=range]{width:100%;margin:7px 0 2px;accent-color:#63bfc4}select,button{font:inherit;background:#1b3041;border:1px solid #456174;color:var(--txt);border-radius:7px;padding:7px 10px;max-width:100%}select{width:100%;margin:7px 0}button{cursor:pointer}button:hover{border-color:var(--cyan)}button.active{border-color:var(--cyan);background:#214a51}.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.statrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:12px}.stat{border:1px solid #2c4454;border-radius:9px;padding:10px 13px;background:#1a2b39}.stat .num{font-size:20px;font-weight:720;white-space:nowrap}.stat .lab{font-size:11px;color:var(--mut)}.plots{display:grid;grid-template-columns:1.05fr 1fr;gap:12px}.plot{height:455px;width:100%}.formgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.kv{border:1px solid #294253;border-radius:7px;padding:8px;font-size:12px;min-width:0;overflow-wrap:anywhere}.kv b{font-size:13px;display:block}.kv small{color:var(--mut);display:block}.pairgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.pair{border:1px solid #365064;background:#182a39;border-radius:8px;padding:10px;text-align:left;white-space:normal}.pair b{display:block;font-size:12px}.pair small{color:var(--mut);display:block}.pair.sel{border-color:var(--cyan);background:#245057}.mathdoc{white-space:normal;word-break:break-word;font-size:13px;line-height:1.7}.mathdoc pre{overflow:auto;border:1px solid #2d4558;background:#101923;padding:10px}.mathdoc table{border-collapse:collapse;max-width:100%;overflow-wrap:anywhere}.mathdoc td,.mathdoc th{padding:5px 9px;border:1px solid #324755}.mathdoc code{color:#ffcb8d}.mathdoc h2{font-size:16px;margin:18px 0 7px}.mathdoc h3{font-size:14px;margin:14px 0 5px}a{color:#8ed7ff}canvas.fallback{width:100%;height:100%;display:block;touch-action:none}.plot:has(canvas.fallback){background:#0d1c27}
+@media(max-width:1150px){.plots{grid-template-columns:1fr}.plot{height:380px}.side{position:static;max-height:unset}}
+@media(max-width:780px){.wrap{grid-template-columns:1fr;padding:0 8px;margin:8px auto}.statrow{grid-template-columns:repeat(2,minmax(0,1fr))}.formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.pairgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.plot{height:325px}header{padding:14px}h1{font-size:18px}}
+</style>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script></head><body>
+<header><h1>GeoMesh / Overhauser V3 — парная оптимизация катушек и RF</h1><p class="lead">1 250 одинаковых геометрических баз × общая/раздельные обмотки × одночастотный/двухканальный RF = <b>5 000 сопоставимых моделей</b>. Сохраняются полная геометрия, послойная намотка и объём жидкости.</p><div class="warn"><b>Исследовательская модель, не калибрована.</b> Результаты в пТ — условные сценарные оценки, не лабораторно измеренная чувствительность. Систематическую угловую ошибку в нТ модель ещё не рассчитывает.</div></header>
+<div class="wrap"><aside class="panel side"><h2>Ограничения и сравнение</h2>
+<div class="control"><label>Полный наружный Ø <output id="limDtxt"></output></label><input id="limD" type="range" min="60" max="100" step="1" value="100"></div>
+<div class="control"><label>Полная высота <output id="limHtxt"></output></label><input id="limH" type="range" min="20" max="100" step="1" value="100"></div>
+<div class="control"><label>Свободный канал от <output id="limBtxt"></output></label><input id="limB" type="range" min="10" max="35" step="1" value="10"></div>
+<div class="control"><label>Энергия не более <output id="limEtxt"></output></label><input id="limE" type="range" min="0.25" max="7" step="0.25" value="7"></div>
+<div class="control"><label>Ошибка не более <output id="limStxt"></output></label><input id="limS" type="range" min="20" max="700" step="10" value="700"></div>
+<div class="control"><label>Низкочастотные обмотки</label><select id="topology"><option value="all">Обе конструкции</option><option value="shared">Одна общая</option><option value="separate">Две отдельные</option></select></div>
+<div class="control"><label>RF-поляризация</label><select id="rfmode"><option value="all">Оба режима</option><option value="single">Одна частота</option><option value="dual">Две частоты с настройкой</option></select></div>
+<div class="row" style="margin-top:12px"><button id="best" class="active">Лучшая точность</button><button id="cheap">Мин. энергия</button><button id="knee">Компромисс</button></div>
+<p style="font-size:12px;color:var(--mut);margin-top:12px">Оси Парето: ошибка в худшей ориентации, энергия полного цикла, объём головки без центрального отверстия. Диаметр и высота — жёсткие пределы. Нажми на точку и сравни четыре варианта той же основы.</p>
+<div class="warn" style="margin-top:15px">Предположения <b>Q, раствор, ESR, восстановление приёмника</b> в модели не измерены для GeoMesh. Для изготовления потребуется FEM и экспериментальная калибровка.</div></aside>
+<main>
+<div class="statrow"><div class="stat"><div class="num" id="total">—</div><div class="lab">Прошли фильтры</div></div><div class="stat"><div class="num" id="front">—</div><div class="lab">Парето-точек</div></div><div class="stat"><div class="num" id="err">—</div><div class="lab">Мин. σ, пТ за цикл</div></div><div class="stat"><div class="num" id="energy">—</div><div class="lab">Мин. энергия, Дж</div></div></div>
+<div class="plots"><section class="panel"><h2>Парето-фронт 3D</h2><p class="lead">X — энергия, Y — ошибка, Z — объём головки. Обведённые точки — недоминируемые.</p><div id="pareto" class="plot"></div></section><section class="panel"><h2>Геометрия выбранной катушки</h2><p class="lead">Сосуд полупрозрачный, приём синий, импульс красный; общая обмотка сиреневая. Намотка отрисована выборочно, расчёты учитывают все витки.</p><div id="coil" class="plot"></div></section></div>
+<section class="panel"><h2 id="selectedTitle">Выбери конструкцию на графике</h2><div class="formgrid" id="selected"></div><h3>Та же геометрия: четыре сопоставимых схемы</h3><div id="paired" class="pairgrid"></div><p id="pairHelp" class="lead"></p></section>
+<section class="panel"><h2>Что именно исправлено по аудиту</h2><div class="formgrid">
+<div class="kv"><b>1250 × 4</b><small>Обе катушки и оба RF-режима проверяются для одной базовой геометрии, без смещения выборки.</small></div>
+<div class="kv"><b>RF / эффективный объём</b><small>Насыщение пропорционально P·Q/V, с нелинейным ESR-перекрытием и насыщением.</small></div>
+<div class="kv"><b>Одночастотный против двухчастотного</b><small>Две ESR-линии в условном спектре. Плата за перестройку и потерю RF-эффективности.</small></div>
+<div class="kv"><b>Угол / импульс</b><small>Поле 1/r и предельный случай адиабатического набора + быстрого отключения, вместо постоянного g_tip.</small></div>
+<div class="kv"><b>Приём</b><small>Одинаковая передаточная функция RLC для сигнала и теплового шума; отдельное время восстановления.</small></div>
+<div class="kv"><b>Ограничения</b><small>На полной сборке проверяются Ø60–100 мм, H20–100 мм, свободный канал и напряжение отключения.</small></div></div><p class="lead">Остаётся сделать: FEM распределения B₁, действительное ESR выбранного раствора, численное решение Блоха в режиме выключения, взаимную нагрузку катушек, инструментальную heading-ошибку.</p></section>
+<section class="panel"><h2>Полные уравнения, коэффициенты, единицы и ограничения</h2><div id="formulaBody" class="mathdoc">Загрузка методики…</div></section>
+<footer class="lead">GeoMesh Research · Версия V3 · Исходный код модели: <a href="model_v3.py">model_v3.py</a> · <a href="summary.json">Контрольная сводка</a> · <a href="https://github.com/UsernameMP/agile-final-project/tree/gh-pages/v3">GitHub</a></footer>
+</main></div>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const fmt=(x,n=2)=>Number(x).toLocaleString('ru-RU',{maximumFractionDigits:n,minimumFractionDigits:n});
+const bounds={D:100,H:100,B:10,E:7,S:700};
+const cols={};let data=[],visible=[],front=[],chosen=null,viewAngle=0.7;
+const HUES={shared:'#66d2d6',separate:'#edaa7d'};
+const n=k=>Number($(k).value);
+function parseCSV(text){const rows=text.trim().split(/\r?\n/);const h=rows.shift().split(',');
+ return rows.filter(Boolean).map(line=>{const ar=line.split(',');const x={};for(let k=0;k<h.length;k++){let value=ar[k];x[h[k]]= k===2||k===3?value:Number(value)}return x;});}
+async function load(){try{
+ const files=Array.from({length:10},(_,i)=>`data-${String(i).padStart(2,'0')}.csv`);
+ const text=await Promise.all(files.map(async f=>{const res=await fetch(f);if(!res.ok)throw Error(`${f}: HTTP ${res.status}`);return await res.text();}));
+ data=text.flatMap(parseCSV);if(data.length!==5000)throw Error('Вместо 5000 получено '+data.length);
+ for(const x of data){if(!Number.isFinite(x.delta_worst_pt)||!Number.isFinite(x.energy_j))throw Error('Ошибочные значения CSV');}
+ await loadFormulas();compute();
+}catch(e){$('total').textContent='Ошибка';$('pareto').textContent='Не удалось загрузить расчёт: '+e.message;console.error(e);}}
+async function loadFormulas(){try{let r=await fetch('FORMULAS.md');if(!r.ok)throw Error('HTTP '+r.status);let md=await r.text();if(window.marked?.parse)$('formulaBody').innerHTML=window.marked.parse(md);else $('formulaBody').innerHTML='<pre>'+md.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</pre>';}catch(e){$('formulaBody').textContent='Документ недоступен: '+e.message;}}
+function dominated(a,b){const x=['delta_worst_pt','energy_j','envelope_cm3'];return x.every(k=>a[k]<=b[k]+1e-11)&&x.some(k=>a[k]<b[k]-1e-11);}
+function skyline(v){const sorted=[...v].sort((a,b)=>a.delta_worst_pt-b.delta_worst_pt||a.energy_j-b.energy_j||a.envelope_cm3-b.envelope_cm3);let fr=[];
+ for(const x of sorted){if(fr.some(y=>dominated(y,x)))continue;fr=fr.filter(y=>!dominated(x,y));fr.push(x);}return fr;}
+function compute(){const od=n('limD'),h=n('limH'),b=n('limB'),e=n('limE'),s=n('limS'),top=$('topology').value,rf=$('rfmode').value;
+ $('limDtxt').textContent=od+' мм';$('limHtxt').textContent=h+' мм';$('limBtxt').textContent=b+' мм';$('limEtxt').textContent=fmt(e,2)+' Дж';$('limStxt').textContent=s+' пТ';
+ visible=data.filter(x=>x.outer_total_mm<=od&&x.outer_total_mm>=60&&x.height_total_mm<=h&&x.height_total_mm>=20&&x.bore_free_mm>=b&&x.energy_j<=e&&x.delta_worst_pt<=s&&(top==='all'||x.topology===top)&&(rf==='all'||x.rf_mode===rf));
+ front=skyline(visible);$('total').textContent=fmt(visible.length,0);$('front').textContent=fmt(front.length,0);
+ $('err').textContent=visible.length?fmt(Math.min(...visible.map(x=>x.delta_worst_pt)),1):'—';$('energy').textContent=visible.length?fmt(Math.min(...visible.map(x=>x.energy_j)),2):'—';
+ if(!visible.length){chosen=null;$('selected').innerHTML='<p>Нет допустимых конструкций.</p>';$('paired').innerHTML='';drawPareto();return;}
+ if(!chosen||!visible.some(x=>x.id===chosen.id))selectBest('knee');else{chosen=visible.find(x=>x.id===chosen.id);renderSelection();drawPareto();}}
+function selectBest(mode){if(!visible.length)return;let pool=mode==='knee'?front:visible;
+ let pick;if(mode==='best')pick=pool.reduce((a,b)=>a.delta_worst_pt<b.delta_worst_pt?a:b);
+ else if(mode==='cheap')pick=pool.reduce((a,b)=>a.energy_j<b.energy_j?a:b);
+ else{const keys=['delta_worst_pt','energy_j','envelope_cm3'],mi={},ma={};for(const k of keys){mi[k]=Math.min(...visible.map(x=>x[k]));ma[k]=Math.max(...visible.map(x=>x[k]));}
+ const score=x=>keys.reduce((v,k)=>v+Math.pow(Math.log(x[k]/mi[k])/Math.max(1e-8,Math.log(ma[k]/mi[k])),2),0);
+ pick=pool.reduce((a,b)=>score(a)<score(b)?a:b);}
+ choose(pick);}
+function choose(v){chosen=v;renderSelection();drawPareto();}
+function metric(a,b){return `<div class="kv"><small>${a}</small><b>${b}</b></div>`;}
+function renderSelection(){if(!chosen)return;const p=chosen;
+ $('selectedTitle').textContent=`№${p.id} · база ${p.base_id} · ${p.topology==='shared'?'общая катушка':'раздельные катушки'} · ${p.rf_mode==='dual'?'двухчастотный RF':'одна частота'}`;
+ const f=[['Внешняя конструкция',`${fmt(p.outer_total_mm)} × ${fmt(p.height_total_mm)} мм`],['Сосуд Øнар. / Øвнутр. / H',`${fmt(p.outer_mm)} / ${fmt(p.inner_mm)} / ${fmt(p.height_mm)} мм`],['Скругление / свободный канал',`${fmt(p.fillet_mm)} / ${fmt(p.bore_free_mm)} мм`],['Раствор',`${fmt(p.volume_ml,1)} мл`],['Приёмная намотка',`${p.rx_turns} вит., Ø${p.rx_wire_mm} мм, ${p.rx_layers} сл.`],['Отклоняющая обмотка',p.topology==='shared'?'Общая с приёмной':`${p.pulse_turns} вит., Ø${p.pulse_wire_mm} мм, ${p.pulse_layers} сл.`],['Расчётная ошибка в худшем положении',`${fmt(p.delta_worst_pt,2)} пТ/цикл (сценарий)`],['Полная энергия',`${fmt(p.energy_j,3)} Дж (RF ${fmt(p.rf_input_energy_j,3)} + импульс ${fmt(p.pulse_energy_j,4)})`],['Время восстановления',`${fmt(p.receiver_dead_ms,1)} мс, заданная схема коммутации`],['Индуцированное напряжение',`${fmt(p.receiver_induced_v,2)} В, на приёмном тракте при выключении`],['Сопротивление / L / Q',`${fmt(p.rx_ohm,2)} Ом / ${fmt(p.rx_l_mh,2)} мГн / ${fmt(p.rx_q,1)}`],['Сатурация ESR / усиление',`${fmt(p.saturation_mean,2)} / ×${fmt(p.enhancement_mean,1)} (модель)`],['RF мощность / время / Q',`${fmt(p.rf_power_w,2)} Вт / ${fmt(p.rf_s,1)} с / ${fmt(p.rf_q,0)}`],['Амплитудная всенаправленность',`${fmt(p.heading_amp_ratio*100,1)}% min/max (НЕ heading bias)`]];
+ $('selected').innerHTML=f.map(x=>metric(...x)).join('');
+ const pairs=data.filter(x=>x.base_id===p.base_id);$('paired').innerHTML=pairs.map(x=>`<button class="pair ${x.id===p.id?'sel':''}" data-id="${x.id}"><b>${x.topology==='shared'?'Общая':'Раздельные'} · ${x.rf_mode==='dual'?'две RF':'одна RF'}</b><small>${fmt(x.delta_worst_pt,1)} пТ / ${fmt(x.energy_j,2)} Дж</small><small>Ø${fmt(x.outer_total_mm,1)} × H${fmt(x.height_total_mm,1)} мм</small></button>`).join('');
+ for(const btn of $('paired').querySelectorAll('button'))btn.onclick=()=>choose(data.find(x=>x.id===Number(btn.dataset.id)));
+ $('pairHelp').textContent='Четыре варианта вычислены при одной геометрии сосуда, одинаковой RF-мощности/времени и одинаковой приёмной обмотке. Различаются катушки, схема импульса, RF-спектр и модельные потери.';
+ drawCoil(p);
+}
+function hover(p){return `№${p.id}; база ${p.base_id}<br>${p.topology==='shared'?'Общая':'Раздельные'}, ${p.rf_mode==='dual'?'две RF':'одна RF'}<br>Ошибка ${fmt(p.delta_worst_pt,1)} пТ<br>Энергия ${fmt(p.energy_j,2)} Дж<br>Ø ${fmt(p.outer_total_mm,1)} мм, H ${fmt(p.height_total_mm,1)} мм`}
+let scatterBound=false;
+function drawPareto(){const div=$('pareto');if(!visible.length){div.textContent='Нет решений';return;}
+ if(!window.Plotly){drawFallback();return;}
+ let ids=new Set(front.map(x=>x.id));const traces=[];
+ for(const top of ['shared','separate'])for(const isFront of [false,true]){
+  const v=visible.filter(x=>x.topology===top&&ids.has(x.id)===isFront);if(!v.length)continue;
+  traces.push({type:'scatter3d',mode:'markers',name:(top==='shared'?'Общая':'Раздельные')+(isFront?' · Парето':''),
+    x:v.map(x=>x.energy_j),y:v.map(x=>x.delta_worst_pt),z:v.map(x=>x.envelope_cm3),
+    text:v.map(hover),customdata:v.map(x=>x.id),hovertemplate:'%{text}<extra></extra>',marker:{size:isFront?4.6:2,color:isFront?(top==='shared'?'#76ecdb':'#ffb26c'):(top==='shared'?'#397d90':'#936a60'),opacity:isFront?.98:.22}});
+ }
+ if(chosen)traces.push({type:'scatter3d',mode:'markers',name:'Выбрано',x:[chosen.energy_j],y:[chosen.delta_worst_pt],z:[chosen.envelope_cm3],customdata:[chosen.id],marker:{size:7,color:'#ffffff'}});
+ Plotly.react(div,traces,{paper_bgcolor:'#13202b',plot_bgcolor:'#13202b',font:{color:'#bdd0dd'},margin:{l:0,r:0,t:0,b:0},showlegend:false,
+  scene:{bgcolor:'#13202b',xaxis:{title:'Энергия, Дж',gridcolor:'#314758'},yaxis:{title:'σ, пТ',type:'log',gridcolor:'#314758'},zaxis:{title:'Объём, см³',gridcolor:'#314758'},camera:{eye:{x:1.6,y:1.5,z:0.95}}}},{responsive:true,displaylogo:false});
+ if(!scatterBound){div.on('plotly_click',o=>{let k=Number(o.points[0].customdata);const p=data.find(x=>x.id===k);if(p)choose(p)});scatterBound=true;}
+}
+function loops(g,label){const result={x:[],y:[],z:[]};const ro=g.outer_mm/2,ri=g.inner_mm/2,h=g.height_mm/2,c=g.fillet_mm;
+ let offset=.45;const list=[[g.rx_turns,g.rx_wire_mm,'rx']];if(g.topology==='separate')list.push([g.pulse_turns,g.pulse_wire_mm,'pulse']);
+ for(let [turns,d,name] of list){let left=turns,lp=0,pitch=d*1.12,base=offset;while(left>0&&lp<60){const off=base+(lp+.5)*pitch;const capacity=Math.floor(.92*2*Math.PI*(ri-off)/pitch);if(capacity<=0)break;let n=Math.min(left,capacity);if(name===label){const step=Math.max(1,Math.ceil(n/200));for(let i=0;i<n;i+=step){const phi=2*Math.PI*i/n;const r0=ri-off,r1=ro+off,z0=h+off;const path=[[r1,z0],[r0,z0],[r0,-z0],[r1,-z0],[r1,z0]];for(const [r,z]of path){result.x.push(r*Math.cos(phi));result.y.push(r*Math.sin(phi));result.z.push(z)}result.x.push(null);result.y.push(null);result.z.push(null);}}
+ left-=n;lp++;}offset+=lp*pitch;}return result;}
+function vessel(g){const x=[],y=[],z=[];let ro=g.outer_mm/2,ri=g.inner_mm/2,h=g.height_mm/2,c=g.fillet_mm;const pts=[];
+ const arc=(a,b,r0,z0)=>{for(let j=0;j<=7;j++){let t=a+(b-a)*j/7;pts.push([r0+c*Math.cos(t),z0+c*Math.sin(t)])}};
+ pts.push([ri+c,h],[ro-c,h]);arc(Math.PI/2,0,ro-c,h-c);pts.push([ro,-h+c]);arc(0,-Math.PI/2,ro-c,-h+c);pts.push([ri+c,-h]);arc(-Math.PI/2,-Math.PI,ri+c,-h+c);pts.push([ri,h-c]);arc(Math.PI,Math.PI/2,ri+c,h-c);
+ for(const [r,zz]of pts){const rx=[],ry=[],rz=[];for(let j=0;j<=60;j++){const t=2*Math.PI*j/60;rx.push(r*Math.cos(t));ry.push(r*Math.sin(t));rz.push(zz)}x.push(rx);y.push(ry);z.push(rz)}return {x,y,z};}
+function drawCoil(g){const div=$('coil');if(!window.Plotly){div.textContent='Для вращения геометрии нужен WebGL. Все физические параметры доступны в карточке ниже.';return;}
+ const vv=vessel(g),rr=loops(g,'rx'),pp=loops(g,'pulse');const traces=[{type:'surface',...vv,opacity:.28,colorscale:[[0,'#75d5d7'],[1,'#75d5d7']],showscale:false,hoverinfo:'skip',name:'Жидкость'},
+ {type:'scatter3d',mode:'lines',...rr,line:{color:g.topology==='shared'?'#b9a4ff':'#559bff',width:2},hoverinfo:'skip',name:'Приём'}];
+ if(g.topology==='separate')traces.push({type:'scatter3d',mode:'lines',...pp,line:{color:'#f37f76',width:3},hoverinfo:'skip',name:'Импульс'});
+ Plotly.react(div,traces,{paper_bgcolor:'#13202b',margin:{l:0,r:0,b:0,t:0},showlegend:false,scene:{bgcolor:'#13202b',aspectmode:'data',xaxis:{visible:false},yaxis:{visible:false},zaxis:{visible:false},camera:{eye:{x:1.6,y:1.4,z:1.0}}}},{responsive:true,displaylogo:false});}
+function drawFallback(){const div=$('pareto');div.replaceChildren();const c=document.createElement('canvas');c.className='fallback';div.append(c);let angle=.6;
+ function paint(){const w=c.clientWidth||400,h=c.clientHeight||300;c.width=w*devicePixelRatio;c.height=h*devicePixelRatio;const ctx=c.getContext('2d');ctx.scale(devicePixelRatio,devicePixelRatio);ctx.fillStyle='#10202e';ctx.fillRect(0,0,w,h);
+ const emax=Math.max(...visible.map(x=>x.energy_j)),smax=Math.max(...visible.map(x=>x.delta_worst_pt)),zmax=Math.max(...visible.map(x=>x.envelope_cm3));
+ let idset=new Set(front.map(x=>x.id));const ordered=visible.map(x=>{const ex=x.energy_j/emax,ey=Math.log1p(x.delta_worst_pt)/Math.log1p(smax),ez=x.envelope_cm3/zmax;
+ const rx=(ex-.5)*Math.cos(angle)-(ez-.5)*Math.sin(angle),rz=(ex-.5)*Math.sin(angle)+(ez-.5)*Math.cos(angle);
+ return {x:w*.5+w*.7*rx,y:h*.5-h*.62*(ey-.5)+h*.2*rz,depth:rz,point:x};}).sort((a,b)=>a.depth-b.depth);
+ for(const a of ordered){ctx.beginPath();ctx.arc(a.x,a.y,idset.has(a.point.id)?3.1:1.7,0,2*Math.PI);ctx.fillStyle=idset.has(a.point.id)?(a.point.topology==='shared'?'#7bd5d4':'#ffbd87'):'rgba(105,145,163,.22)';ctx.fill();}
+ ctx.fillStyle='#b9cbd4';ctx.fillText('Canvas 3D-вид: вращай пальцем',8,20);}
+ paint();let down=false,last=0;c.onpointerdown=e=>{down=true;last=e.clientX;c.setPointerCapture(e.pointerId)};c.onpointermove=e=>{if(down){angle+=(e.clientX-last)*.011;last=e.clientX;paint()}};c.onpointerup=()=>down=false;}
+for(const id of ['limD','limH','limB','limE','limS','topology','rfmode'])$(id).addEventListener('input',()=>{if(data.length)compute()});
+for(const m of ['best','cheap','knee'])$(m).onclick=()=>selectBest(m);
+load();
+</script></body></html>
