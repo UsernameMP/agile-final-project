@@ -61,7 +61,10 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <div class="slider"><div class="row"><span>Энергия за измерение, Дж</span><strong id="eMaxVal">8.0</strong></div><input type="range" id="eMax" min=".5" max="8" value="8" step=".1"/></div>
 <div class="fields">
 <div class="field"><label for="rfMode">RF-режим</label><select id="rfMode"><option value="all">Сравнить оба</option><option value="single">Одна частота</option><option value="dual">Две частоты</option></select></div>
-<div class="field"><label for="scenario">Отображаемая ошибка</label><select id="scenario"><option value="nominal">Номинальная модель</option><option value="stress">Условный стресс-сценарий</option></select></div>
+<div class="field"><label for="objective">Цель оптимизации</label><select id="objective">
+ <option value="shot">Минимальная ошибка за цикл</option>
+ <option value="time">Чувствительность за время, пТ/√Гц</option></select></div>
+ <div class="field"><label for="scenario">Отображаемая ошибка</label><select id="scenario"><option value="nominal">Номинальная модель</option><option value="stress">Условный стресс-сценарий</option></select></div>
 </div>
 <hr style="border:0;border-top:1px solid var(--border);margin:19px 0"/>
 <h3>Литературный RF-режим и параметры калибровки</h3>
@@ -107,7 +110,7 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <div class="cards">
 <div class="metric"><div class="num" id="count">—</div><div class="tag">Конфигураций после фильтра</div></div>
 <div class="metric"><div class="num" id="frontcount">—</div><div class="tag">Недоминируемых</div></div>
-<div class="metric"><div class="num" id="besterror">—</div><div class="tag">Сценарный шум, пТ/цикл</div></div>
+<div class="metric"><div class="num" id="besterror">—</div><div class="tag"><span id="besterrorunit">Сценарный шум, пТ/цикл</span></div></div>
 <div class="metric"><div class="num" id="bestenergy">—</div><div class="tag">Минимальная энергия, Дж</div></div>
 </div>
 <canvas id="plot" aria-label="Вращаемое трёхмерное облако решений Парето"></canvas>
@@ -161,7 +164,9 @@ let dataset=[],visible=[],front=[],selected=null,currentCfg={},stats={},scenario
 let yaw=.64,pitch=.42,deviceYaw=.55,devicePitch=.42,plotPins=[];
 const fmt=(n,d=2)=>Number.isFinite(Number(n))?Number(n).toLocaleString('ru-RU',{maximumFractionDigits:d,minimumFractionDigits:0}):'—';
 const modeName=m=>m==='dual'?'Две частоты':'Одна частота';
-const errorKey=()=>scenario==='stress'?'conservativePT':'errorPT';
+const errorKey=()=>$('objective').value==='time'?
+ (scenario==='stress'?'conservativePTsqrtHz':'resolutionPTsqrtHz'):
+ (scenario==='stress'?'conservativePT':'errorPT');
 function packInputs(){
  return {rfArchitecture:$('rfArchitecture').value,
   rfQReference:Number($('rfQReference').value),
@@ -209,8 +214,9 @@ function applyFilters(reset){
  bore=Number($('bMin').value),en=Number($('eMax').value),mode=$('rfMode').value;
  scenario=$('scenario').value;
  visible=dataset.filter(p=>p.od<=d&&p.hh<=h&&p.bore>=bore&&p.energyJ<=en&&(mode==='all'||p.mode===mode));
- front=M.pareto(visible,scenario==='stress');
+ front=M.pareto(visible,scenario==='stress',$('objective').value);
  const key=errorKey();
+ $('besterrorunit').textContent=$('objective').value==='time'?'Расчётный шум, пТ/√Гц':'Расчётная ошибка, пТ/цикл';
  $('count').textContent=fmt(visible.length,0);
  $('frontcount').textContent=fmt(front.length,0);
  $('besterror').textContent=visible.length?fmt(Math.min(...visible.map(p=>p[key])),1):'—';
@@ -443,7 +449,7 @@ drag($('plot'),(dx,dy)=>{yaw+=dx*.009;pitch=Math.max(-1.35,Math.min(1.35,pitch+d
 drag($('device'),(dx,dy)=>{deviceYaw+=dx*.009;devicePitch=Math.max(-1.3,Math.min(1.3,devicePitch+dy*.006));drawDevice()});
 ['dMax','hMax','bMin','eMax'].forEach(id=>$(id).addEventListener('input',()=>{
  $(id+'Val').textContent=id==='eMax'?Number($(id).value).toFixed(1):$(id).value;applyFilters(false)}));
-['rfMode','scenario'].forEach(id=>$(id).addEventListener('change',()=>applyFilters(false)));
+['rfMode','scenario','objective'].forEach(id=>$(id).addEventListener('change',()=>applyFilters(false)));
 $('rebuild').onclick=rebuild;
 $('spinTest').onclick=()=>{
  if(!selected)return;
@@ -525,13 +531,13 @@ $('exportCad').onclick=()=>{
     epoxy_mm:c.epoxyMM,winding_turns:p.turns,winding_wire_d_mm:p.wire,
     rf_nominal_frequency_mhz:58.8,lf_nominal_frequency_hz:267.52218744e6*50e-6/(2*Math.PI),
     rf_nominal_input_power_w:p.rfPower,nominal_earth_field_uT:50,
-    source_model_version:'4.3',source_case_id:p.id,
+    source_model_version:'4.5',source_case_id:p.id,
     source_rf_mode:p.mode,source_model_sigma_pt_per_shot:p.errorPT,
     source_model_status:'UNCALIBRATED: geometry only; no validated RF field or pT sensitivity'
   };
   const file=new Blob([JSON.stringify(cad,null,2)+'\n'],{type:'application/json;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(file);
-  a.download='GeoMesh_V4_3_CAD_case_'+p.id+'.json';a.click();
+  a.download='GeoMesh_V4_5_CAD_case_'+p.id+'.json';a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 };
 $('export').onclick=()=>{
