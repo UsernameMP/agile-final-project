@@ -1,0 +1,27 @@
+name: GeoMesh V4 regression
+
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - 'v4/**'
+      - '.github/workflows/geomesh-v4-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Node model and browser interaction checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify 5000-case physics scenario and Pareto
+        run: node v4/test_v4.js
+      - name: Verify interactive UI and 90 mm recalc
+        run: node v4/test_browser_smoke.js
