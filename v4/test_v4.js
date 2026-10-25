@@ -42,6 +42,20 @@ const narrow=M.estimate(fc,g1,'single',{...M.DEF,rfSaturationPowerW:.1});
 const broad=M.estimate(fc,g1,'single',{...M.DEF,rfSaturationPowerW:1.2});
 assert.ok(narrow.rfB1UT>broad.rfB1UT,'low saturation threshold raises B1 equivalent at fixed P');
 const f1=M.estimate(fc,g1,'single',{...M.DEF});
+const taller={...fc,height:80},gtaller=M.geometry(taller,{...M.DEF});
+assert.ok(gtaller&&gtaller.volume>g1.volume,'more liquid via height at same coil should fit');
+assert.ok(gtaller.qLoad<g1.qLoad,'Q volume-loss penalty must be visible');
+assert.ok(M.precompute(taller,gtaller,'single',{...M.DEF}).b1UT<
+ M.precompute(fc,g1,'single',{...M.DEF}).b1UT,'same RF power must dilute effective B1 with extra volume');
+const p01=M.estimate({...fc,rfPower:.1},g1,'dual',{...M.DEF});
+const p05=M.estimate({...fc,rfPower:.5},g1,'dual',{...M.DEF});
+const p15=M.estimate({...fc,rfPower:1.5},g1,'dual',{...M.DEF});
+assert.ok(p01.rfESRMean<p05.rfESRMean&&p05.rfESRMean<p15.rfESRMean,'ESR saturation must rise with RF power');
+assert.ok((p15.rfESRMean-p05.rfESRMean)/1 < (p05.rfESRMean-p01.rfESRMean)/.4,
+ 'RF saturation grows with diminishing returns');
+const timed=M.pareto(a.points,false,'time');
+assert.ok(timed.length>0&&timed.every(p=>Number.isFinite(p.resolutionPTsqrtHz)));
+
 const f2=M.estimate(fc,g2,'single',{...M.DEF,conductivity:.04});
 assert.ok(f2.rfB1UT>0&&f1.rfB1UT>0,'Maxwell-Ampere estimates remain finite');
 // Conductivity changes both RF losses and displacement/conduction currents; B1 need not be monotonic.
