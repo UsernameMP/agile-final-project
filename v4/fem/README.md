@@ -10,7 +10,7 @@
 
 Baseline geometry: liquid OD 70 mm, ID 36 mm, axial height 75 mm, round radius 2 mm; vessel wall 0.7 mm, Cu electrodes 0.05 mm, LF winding build 3.0 mm, barrier 0.45 mm, epoxy 0.85 mm; assembled full Ø80.1 mm × H85.1 mm, free bore Ø25.9 mm, liquid 211.721 mL. These **are an illustrative starting point, not an optimized result**.
 
-**Physical electrode warning:** The CAD places RF metal films *outside the quartz/polymer vessel wall*. The wall therefore lies in the RF electrical path, reducing capacitance/coupling. Current V4 analytical capacitor formula did not correctly include this layered dielectric; recompute in FEM. Longitudinal 0.8-mm electrode slits are added to break closed LF circumferential loops; actual RF feed/return paths are not defined by the CAD and must be modeled.
+**Physical electrode warning:** The CAD places RF metal films *outside the quartz/polymer vessel wall*. The wall therefore lies in the RF electrical path, reducing capacitance/coupling. V4.3 analytical screening **now includes the two series coaxial vessel-wall dielectric layers**; this remains only a 1D ideal coax approximation. Recompute the fields, capacitance, dielectric participation and Q in 3D FEM with segmented electrodes and physically specified RF feed/return paths. Longitudinal 0.8-mm electrode slits are added to break closed LF circumferential loops; actual RF feed/return paths are not defined by the CAD and must be modeled.
 
 ## 1. COMSOL Multiphysics
 
@@ -48,3 +48,7 @@ All fields in SI, orientation specified, with coordinate axes and complex phasor
 6. Result of EM solve is **not** directly a sensor noise in pT. Compute DNP saturation and spatiotemporal proton magnetization from fitted spin parameters; simulate actual FID and amplifier+ADC noise and estimate frequency using same digital method as hardware.
 
 The V4.2 website contains an illustrative RF-feed sensitivity sweep `kappa=0.5,1,2`. These are model variations, not confidence bounds; FEM field maps are the next required evidence.
+
+### V4.3 model correlation gate
+
+Compare analytic no-feed reference capacitance for the baseline 0.7-mm wall case (**154.3 pF**, nominal epsLiquid=72, epsWall=3.8, electrode overlap 69 mm) against a meshed electrostatic 3-layer coaxial control case. Then turn on electrode slots, finite film thickness, wire leads and RF ports one by one; the final 3D HFSS/COMSOL result may differ drastically from the analytic value. Validate B1 phase and magnitude normalized to **accepted** RF power, both with and without vessel walls. Export complex B1 and energy density in liquid and walls, not only S11 and Q. A successful capacitance test is **necessary but insufficient** for DNP feasibility.
