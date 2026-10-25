@@ -109,6 +109,7 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <button id="spinTest" style="margin-top:12px">Проверить динамику отклоняющего импульса (Bloch)</button>
 <button id="exportCad" style="margin-top:10px;background:#19505a">Экспортировать выбранную головку для COMSOL / ANSYS (CAD JSON)</button>
 <p class="caption">JSON совместим с <a href="fem/build_cad.py">CadQuery-генератором STEP</a> (команда: <code>python build_cad.py --config selected.json --out generated</code>). Это геометрия, <strong>не решённая FEM-задача</strong>. Для RF-расчёта нужно добавить физический подвод и возврат токов.</p>
+<p class="caption">Готовая STEP-сборка контрольного расчётного варианта №2332: <a href="fem/selected_90mm_4J/GeoMesh_V4_FEM_assembly.step" download>скачать STEP</a> · <a href="fem/selected_90mm_4J/candidate_config.json">параметры</a> · <a href="fem/selected_90mm_4J/geometry_manifest.json">объёмы и размерности</a>. Это НЕ результат FEM-моделирования.</p>
 <p id="spinResults" class="caption">Расчёт выбранного импульса выполняется отдельно; исходный фронт использует ускоренную оценку адиабатичности.</p>
 </section>
 </div>
