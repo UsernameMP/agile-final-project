@@ -15,13 +15,15 @@ const DEF=Object.freeze({
  rfAxialNonuniformity:.16,rfRadialNonuniformity:.22,
  rfReferenceT1e:3e-6,rfReferenceT2e:420e-9,
  maxOD:100,maxH:100,minBore:10,minOD:60,minH:20,
- epsilonR:72,lossTangent:0.030,conductivity:0.004,efieldShare:0.94,
+ // Diglyme base solvent in JOM-4S: dielectric ~7.2; solution ESR chemistry is not yet measured.
+  epsilonR:7.23,lossTangent:0.003,conductivity:0.000003,efieldShare:0.94,
+  liquidDensityKGm3:944,liquidHeatCapacityJkgK:2035,
  vesselWallMM:0.70,vesselEpsilonR:3.8,vesselTanDelta:0.001,electrodeCopperMM:0.05,
  electrodeEndClearanceMM:3.0,rfStrayPF:10.0,
  qMetal:85,qCoupler:33,feedFactor:1.0,xi:0.46,leakage:0.80,
  t1e:3.0e-6,t2e:420e-9,esrHalfMHz:0.82,esrWidthMHz:0.40,
  tDNP:1.0,T2star:2.68,gradientNTM:20,ampNV:1.4,ampPA:0.10,
- b0:B0,T:293.15,protonDensity:6.68e28,rfEfficiency:0.55,
+ b0:B0,T:293.15,protonDensity:5.94e28,rfEfficiency:0.55,
  contW:0.055,rfOverheadDual:0.035,readS:1.6,rxLoad:100000,
  pulseClamp:240,baseBlankS:0.0008,rfBarrierMM:0.45,epoxyMM:0.85
 });
@@ -119,11 +121,11 @@ function geometry(b,c){
  if(c.rfArchitecture==='literature'){
    const ratio=volume/c.rfRefVolumeML;
    const penalty=Math.max(.25,1+c.rfVolumeLoss*(ratio-1)+
-      .14*(c.conductivity/.004-1)+.10*(c.lossTangent/.03-1)+
+      .14*(c.conductivity/.000003-1)+.10*(c.lossTangent/.003-1)+
       .06*(c.vesselTanDelta/.001-1));
    qa=c.rfQReference/penalty;qd=qa*3; // effective Q proxies
    hf=Math.max(0,Math.min(.95,c.rfLiquidLossFraction*
-     Math.pow(ratio,.25)*(.3*c.conductivity/.004+.7*c.lossTangent/.03)));
+     Math.pow(ratio,.25)*(.3*c.conductivity/.000003+.7*c.lossTangent/.003)));
    hw=Math.max(0,Math.min(.2,.015*c.vesselTanDelta/.001));
  }
  const eenv=PI*(od*od-bore*bore)/4*hh/1000;
@@ -255,7 +257,7 @@ function estimate(b,g,mode,c,detail=false){
  let modeEnergy=mode==='dual'?c.rfOverheadDual:0;
  const shotJ=eRF+eElec+g.pulseEnergy+modeEnergy;
  let heatJ=b.rfPower*b.rfTime*g.heatFrac;
- let deltaT=heatJ/(g.volume*1e-3*4180); // aqueous solution, rho~1g/ml
+ let deltaT=heatJ/(g.volume*1e-6*c.liquidDensityKGm3*c.liquidHeatCapacityJkgK); // diglyme properties
  // conservative sensitivity is a scenario stress, not a statistical 95% confidence interval
  let qSlope=pre.alpha0/(1+pre.alpha0);
  let robustScale=1.6+1.4*qSlope;
