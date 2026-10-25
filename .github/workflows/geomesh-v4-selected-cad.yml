@@ -1,0 +1,63 @@
+name: GeoMesh V4 selected FEM head
+on:
+  workflow_dispatch:
+  push:
+    branches: [gh-pages]
+    paths:
+      - 'v4/model.js'
+      - 'v4/fem/export_candidate.js'
+      - 'v4/fem/build_cad.py'
+      - '.github/workflows/geomesh-v4-selected-cad.yml'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Select scenario-best one-head geometry under diameter and energy limits
+        run: node v4/fem/export_candidate.js v4/fem/selected_90mm_4J/candidate_config.json
+      - name: Install CAD exporter
+        run: python -m pip install 'cadquery>=2.5,<2.9'
+      - name: Export analytic-screened geometry as neutral 3D STEP
+        run: |
+          python v4/fem/build_cad.py --config v4/fem/selected_90mm_4J/candidate_config.json --out v4/fem/selected_90mm_4J
+      - name: Check CAD constraints and record physical qualification warning
+        run: |
+          python - <<'PY'
+          import json,math,pathlib
+          f=pathlib.Path('v4/fem/selected_90mm_4J')
+          p=json.loads((f/'candidate_config.json').read_text())
+          x=json.loads((f/'geometry_manifest.json').read_text())
+          assert (f/'GeoMesh_V4_FEM_assembly.step').stat().st_size>10000
+          assert len(x['parts'])==7
+          assert x['full_outer_d_mm']<=90.000001
+          assert x['full_h_mm']<=100.000001
+          assert x['free_bore_d_mm']>=10
+          assert p['corner_radius_mm']>=p['vessel_wall_mm']
+          print('CAD PASS | case:',p['source_case_id'],'| full Ø:',x['full_outer_d_mm'],
+                '| H:',x['full_h_mm'],'| liquid ml:',x['liquid_volume_ml'])
+          print('NOT a FEM solution or measured pT accuracy. Supply actual RF feeds and radical properties.')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GeoMesh-V4-selected-head-90mm-4J-CAD-only
+          path: v4/fem/selected_90mm_4J/
+      - name: Publish generated STEP and matching geometry metadata
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add v4/fem/selected_90mm_4J/
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish selected V4.3 scenario head STEP CAD (not FEM)"
+            git push origin gh-pages
+          fi
