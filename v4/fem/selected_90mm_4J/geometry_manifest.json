@@ -1,0 +1,63 @@
+{
+  "status": "CAD only, not an EM/thermal/spin solution",
+  "step_file": "GeoMesh_V4_FEM_assembly.step",
+  "full_outer_d_mm": 85.25519296818972,
+  "full_h_mm": 97.3226605226621,
+  "free_bore_d_mm": 25.019581253513692,
+  "liquid_volume_ml": 263.1204952712049,
+  "parameters": {
+    "outer_liquid_d_mm": 73.09119296818972,
+    "inner_liquid_d_mm": 37.183581253513694,
+    "liquid_height_mm": 85.1586605226621,
+    "corner_radius_mm": 3.3992970079183573,
+    "vessel_wall_mm": 0.7,
+    "copper_electrode_thickness_mm": 0.05,
+    "electrode_end_clearance_mm": 3.3992970079183573,
+    "electrode_axial_slot_mm": 0.8,
+    "rf_insulation_mm": 0.45,
+    "winding_envelope_mm": 4.032000000000001,
+    "epoxy_mm": 0.85,
+    "winding_turns": 1350,
+    "winding_wire_d_mm": 0.45,
+    "rf_nominal_frequency_mhz": 58.8,
+    "lf_nominal_frequency_hz": 2128.873925891628,
+    "rf_nominal_input_power_w": 1,
+    "nominal_earth_field_uT": 50,
+    "source_case_id": 2332,
+    "source_model_version": "4.3",
+    "source_rf_mode": "dual",
+    "source_conditional_error_pT_per_shot": 257.64343468586316,
+    "source_cycle_energy_j": 3.3218008490080093,
+    "source_status": "SCENARIO ONLY, not measured, not Maxwell FEM"
+  },
+  "parts": [
+    {
+      "name": "01_radical_liquid",
+      "volume_mm3": 263120.495
+    },
+    {
+      "name": "02_vessel_dielectric",
+      "volume_mm3": 24564.504
+    },
+    {
+      "name": "03_outer_RF_electrode_slit",
+      "volume_mm3": 914.376
+    },
+    {
+      "name": "04_inner_RF_electrode_slit",
+      "volume_mm3": 436.702
+    },
+    {
+      "name": "05_RF_insulation",
+      "volume_mm3": 16097.57
+    },
+    {
+      "name": "06_homogenized_poloidal_LF_coil",
+      "volume_mm3": 154068.413
+    },
+    {
+      "name": "07_encapsulation",
+      "volume_mm3": 34737.901
+    }
+  ]
+}
