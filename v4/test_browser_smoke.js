@@ -102,6 +102,6 @@ assert.ok(csv.split('\n').length>125,'IQ CSV includes all 128 samples');
 console.log('PASS: selected-head FID interaction produced IQ frequency and Monte Carlo results');
 console.log('PASS: exported Pareto-selected physical vessel parameters for STEP CAD');
 console.log(JSON.stringify({
- status:'pass',revision:'V4.3',defaultCount:5000,filteredCount90:count90,
+ status:'pass',revision:'V4.4',defaultCount:5000,filteredCount90:count90,
  defaultFront:fullFront,front90,recalculation90:'PASS',invalidESR:'PASS'
 },null,2));
