@@ -1,0 +1,57 @@
+{
+  "status": "CAD only, not an EM/thermal/spin solution",
+  "step_file": "GeoMesh_V4_FEM_assembly.step",
+  "full_outer_d_mm": 80.1,
+  "full_h_mm": 85.1,
+  "free_bore_d_mm": 25.9,
+  "liquid_volume_ml": 211.72140912911706,
+  "parameters": {
+    "outer_liquid_d_mm": 70.0,
+    "inner_liquid_d_mm": 36.0,
+    "liquid_height_mm": 75.0,
+    "corner_radius_mm": 2.0,
+    "vessel_wall_mm": 0.7,
+    "copper_electrode_thickness_mm": 0.05,
+    "electrode_end_clearance_mm": 3.0,
+    "electrode_axial_slot_mm": 0.8,
+    "rf_insulation_mm": 0.45,
+    "winding_envelope_mm": 3.0,
+    "epoxy_mm": 0.85,
+    "winding_turns": 900,
+    "winding_wire_d_mm": 0.4,
+    "rf_nominal_frequency_mhz": 58.8,
+    "lf_nominal_frequency_hz": 2129.0,
+    "rf_nominal_input_power_w": 0.8,
+    "nominal_earth_field_uT": 50.0
+  },
+  "parts": [
+    {
+      "name": "01_radical_liquid",
+      "volume_mm3": 211721.409
+    },
+    {
+      "name": "02_vessel_dielectric",
+      "volume_mm3": 21301.882
+    },
+    {
+      "name": "03_outer_RF_electrode_slit",
+      "volume_mm3": 771.65
+    },
+    {
+      "name": "04_inner_RF_electrode_slit",
+      "volume_mm3": 371.71
+    },
+    {
+      "name": "05_RF_insulation",
+      "volume_mm3": 13988.304
+    },
+    {
+      "name": "06_homogenized_poloidal_LF_coil",
+      "volume_mm3": 98669.334
+    },
+    {
+      "name": "07_encapsulation",
+      "volume_mm3": 29668.12
+    }
+  ]
+}
