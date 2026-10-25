@@ -113,7 +113,7 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <script src="model.js"></script><script>
 (function(){
 "use strict";
-const $=s=>document.getElementById(s), M=window.GeoMeshV4;
+const PI=Math.PI, $=s=>document.getElementById(s), M=window.GeoMeshV4;
 let dataset=[],visible=[],front=[],selected=null,currentCfg={},stats={},scenario='nominal';
 let yaw=.64,pitch=.42,deviceYaw=.55,devicePitch=.42,plotPins=[];
 const fmt=(n,d=2)=>Number.isFinite(Number(n))?Number(n).toLocaleString('ru-RU',{maximumFractionDigits:d,minimumFractionDigits:0}):'—';
