@@ -42,15 +42,16 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 @media(max-width:1000px){.layout{grid-template-columns:1fr}.plots{grid-template-columns:1fr 1fr}}
 @media(max-width:700px){.plots{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}canvas{height:295px}.details{grid-template-columns:1fr}}
 </style></head><body>
-<header><div class="topline">GEOMESH / RESEARCH MODEL V4.4 / 25 OCT 2026</div>
+<header><div class="topline">GEOMESH / RESEARCH MODEL V4.5 / 25 OCT 2026</div>
 <h1>Оверхаузеровский магнитометр · высокий тор</h1>
 <p>Одна жидкостная кольцевая полость со скруглённым прямоугольным сечением. Внутренний и наружный цилиндрические RF-электроды <strong>снаружи диэлектрической стенки</strong>. Одна тороидальная катушка для низкочастотного отклонения и приёма FID. Только одна головка, без колонны.</p>
-<nav><a href="#workspace">Оптимизация</a><a href="#device-panel">3D-геометрия</a><a href="#details-panel">Электрика и RF</a><a href="#fid-panel">Комплексный FID</a><a href="FORMULAS.md">Все формулы и допущения</a><a href="model.js">Расчётный JavaScript</a><a href="../v3/">Архив V3</a></nav>
+<nav><a href="#workspace">Оптимизация</a><a href="#device-panel">3D-геометрия</a><a href="#details-panel">Электрика и RF</a><a href="#fid-panel">Комплексный FID</a><a href="LITERATURE_PARAMETERS.md">Литературные параметры</a><a href="FORMULAS.md">Все формулы и допущения</a><a href="model.js">Расчётный JavaScript</a><a href="../v3/">Архив V3</a></nav>
 </header>
 <main>
-<section class="panel"><div class="crit"><strong>Исследовательский расчёт, не паспортная чувствительность.</strong> Радиальные RF-электроды создают электрическое поле. Для симметричной квазистатической моды <i>B₁φ</i> оценивается из уравнения Ампера–Максвелла и <strong>имеет нуль в средней плоскости лишь для предположенной симметричной RF-моды</strong>. Реальная картина может меняться из-за RF-подвода, разрезов электродов и обратных токов: их влияние пока параметризовано неизвестным коэффициентом κ. Без 3D электродинамического расчёта или измерений нельзя считать этот магнитный профиль подтверждённым. Систематическая heading-ошибка и магнитная восприимчивость материалов не вычисляются. Не использовать представленные пТ для метрологической аттестации или выбора готового датчика.</div></section>
-<section class="panel"><div class="crit"><strong>Почему прежняя V4 показывала около 800 пТ?</strong> Исходная V4 использовала T₂e=55 нс совместно с ESR-полушириной 0,40 МГц, хотя для лоренцевой однородной линии они несовместимы. В V4.2 эти параметры согласованы и доступны для пересчёта; значение 800 пТ из прежнего сценария не следует считать свойством реальной головки. В предположенной RF-электродной моде загруженная RF-добротность всё ещё около 12 и степень насыщения ESR зависит от выбранного T₂e. Кроме того, выбранная симметричная RF-мода имеет нуль B₁ на середине высоты, а положительная и инвертированная DNP-намагниченности отдельных слоёв могут взаимно компенсировать FID. Все три эффекта <strong>зависят от непроверенной модели RF-подвода</strong>. В предыдущей версии 55 нс соответствовали минимальной однородной HWHM 2,89 МГц; теперь начальный сценарий T₂e=420 нс и HWHM=0,40 МГц внутренне согласован, но не измерен на нашем растворе. Поэтому абсолютные пТ и рейтинг вариантов по шуму <strong>пока физически не верифицированы</strong>. Это не измеренная чувствительность и не основание считать, что реальная головка будет иметь шум 800 пТ. Публикация Li et al. даёт <strong>1,69 пТ/√Гц</strong> для другой, экспериментально настроенной архитектуры; здесь выводятся <strong>пТ на цикл</strong>, поэтому показатели нельзя численно приравнивать.</div></section>
-<section class="panel"><div class="crit"><strong>V4.3 · пересчитанная физика RF-ёмкости.</strong> Обе RF-обкладки находятся <strong>снаружи стенок сосуда</strong>. Жидкость и стенки образуют последовательную коаксиальную ёмкость, поэтому не всё напряжение резонатора возбуждает жидкость. Это исправление меняет RF B₁, насыщение ESR и порядок решений. В номинальном некалиброванном сценарии минимальная ошибка получилась около <strong>258 пТ/цикл</strong>, а не ~124 пТ/цикл в V4.2. Ни то ни другое не является измеренной чувствительностью. Обязательна 3D-верификация B₁ для реальных подводов и разрезов электродов.</div></section>
+<section class="panel"><div class="crit"><strong>V4.5 · MVP с численными опорами из публикаций.</strong>
+В основной модели использована экстраполяция RF-резонатора типа JOM-4S: Q≈1278 при 175 мл, частота 58,8 МГц, T₂*=2,68 с, приёмный усилитель 1,4 нВ/√Гц. JOM-5SF сообщает RF Q≈1500. Эти значения <strong>измерялись на других конструкциях</strong>, но приняты как отправные инженерные диапазоны. RF-порог насыщения, масштабирование добротности с объёмом, пространственная однородность и потери на нагрев — <strong>открытые параметры MVP</strong> для будущей калибровки. Сценарий «Радиальный контроль V4.3» сохраняет прежнюю симметричную модель с узлом B₁ в средней плоскости. Это разные варианты RF-топологии, не одна схема с просто увеличенной Q.</div></section>
+<section class="panel"><div class="crit"><strong>Почему прежняя V4.3 давала около 258 пТ/цикл.</strong>
+Для идеального радиально нагруженного конденсатора с условным Q≈17 возникали слабое возбуждение и компенсация поляризации. Высокая Q~1200 из исследований относится к коаксиальной резонаторной электромагнитной моде, поэтому для проверки её потенциала V4.5 использует отдельный эффективный закон насыщения. Фактическая RF-карта нашего тора и чувствительность <strong>ещё не измерены</strong>. Показатели пТ/цикл и пТ/√Гц — расчётные и требуют калибровки на первом прототипе.</div></section>
 <div class="layout" id="workspace">
 <aside class="panel">
 <h2>Ограничения и физические сценарии</h2>
@@ -63,6 +64,18 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <div class="field"><label for="scenario">Отображаемая ошибка</label><select id="scenario"><option value="nominal">Номинальная модель</option><option value="stress">Условный стресс-сценарий</option></select></div>
 </div>
 <hr style="border:0;border-top:1px solid var(--border);margin:19px 0"/>
+<h3>Литературный RF-режим и параметры калибровки</h3>
+<div class="fields" style="margin-top:10px">
+<div class="field"><label for="rfArchitecture">RF-топология</label><select id="rfArchitecture">
+<option value="literature">Литературный коаксиальный (MVP)</option><option value="radial">Радиальный контроль V4.3</option>
+</select></div>
+<div class="field"><label for="rfQReference">Q при 175 мл (Gong 2021: 1278)</label><input id="rfQReference" type="number" min="150" max="2500" value="1278" step="50"/></div>
+<div class="field"><label for="rfSaturationPowerW">Условный P₁/₂ ESR, Вт</label><input id="rfSaturationPowerW" type="number" min=".05" max="2" value=".4" step=".05"/></div>
+<div class="field"><label for="rfVolumeLoss">Доп. потери Q с ростом V, коэффициент</label><input id="rfVolumeLoss" type="number" min="0" max="2" value=".35" step=".05"/></div>
+<div class="field"><label for="rfAxialNonuniformity">Неоднородность RF по высоте</label><input id="rfAxialNonuniformity" type="number" min="0" max=".8" value=".16" step=".05"/></div>
+<div class="field"><label for="rfLiquidLossFraction">Доля RF-мощности, поглощаемая жидкостью</label><input id="rfLiquidLossFraction" type="number" min=".02" max=".9" value=".28" step=".02"/></div>
+</div>
+<p class="caption">Q=1278 и 1500 — опубликованные характеристики коаксиальных RF-резонаторов; <b>P₁/₂=.4 Вт, потери .35, неоднородность .16 и поглощение .28 являются пока гипотезами</b>. Вариации этих величин показывают устойчивость конструкции к отсутствию точных данных. <a href="LITERATURE_PARAMETERS.md">Происхождение и диапазоны</a>.</p>
 <h3>Параметры сосуда, раствора и RF (для полного пересчёта)</h3>
 <div class="fields" style="margin-top:10px">
 <div class="field"><label for="vesselWallMM">Толщина стенки сосуда, мм</label><input id="vesselWallMM" type="number" min=".3" max="1.2" value=".7" step=".1"/></div>
@@ -75,9 +88,11 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <div class="field"><label for="conductivity">Электропроводность, С/м</label><input id="conductivity" type="number" min="0" max=".2" value=".004" step=".001"/></div>
 <div class="field"><label for="lossTangent">tan δ растворителя</label><input id="lossTangent" type="number" min=".002" max=".3" value=".030" step=".005"/></div>
 <div class="field"><label for="xi">Коэффициент связи ξ</label><input id="xi" type="number" min=".01" max="1" value=".46" step=".02"/></div>
-<div class="field"><label for="T2star">T₂*, с (протоны)</label><input id="T2star" type="number" min=".1" max="8" value="2" step=".1"/></div>
+<div class="field"><label for="T2star">T₂*, с (протоны)</label><input id="T2star" type="number" min=".1" max="8" value="2.68" step=".1"/></div>
 </div>
 <div class="fields" style="margin-top:10px">
+<div class="field"><label for="readS">Время FID-регистрации, с</label><input id="readS" type="number" min=".5" max="5" value="1.6" step=".2"/></div>
+<div class="field"><label for="ampNV">Шум усилителя, нВ/√Гц</label><input id="ampNV" type="number" min=".3" max="5" value="1.4" step=".1"/></div>
 <div class="field"><label for="t2eNs">T₂e электронов, нс</label><input id="t2eNs" type="number" min="30" max="2000" value="420" step="10"/></div>
 <div class="field"><label for="esrWidthMHz">Полуширина ESR, МГц</label><input id="esrWidthMHz" type="number" min=".1" max="12" value=".4" step=".1"/></div>
 </div><p class="caption">Проверка: наблюдаемая лоренцева полуширина ESR ≥ 1/(2πT₂e). 420 нс / 0,4 МГц — согласованный <strong>пример</strong>, не измерение.</p>
@@ -136,8 +151,8 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <div><h3>Пока требует измерений или 3D-поля</h3><p class="caption">3D RF-поле с учётом вводов, обратных токов и торцевых полей (текущий расчёт — квазистатика); реальные ESR-линии выбранного радикала; T₁e и T₂e; сольватация и перенос поляризации; магнитная восприимчивость жидкости, электродов и корпуса; паразитная емкость и токи утечки; защита и восстановление реального усилителя; полный комплексный FID при 3D-карте неоднородности поля. Все пТ сейчас модельные, а не измеренные.</p></div>
 </div>
 <p><a href="fem/README.md">Постановка COMSOL/ANSYS</a> · <a href="FORMULAS.md">Полный реестр уравнений, источников неопределённости и проверок</a> · <a href="model.js">Исходный код</a> · <a href="README.md">Описание ревизии</a></p>
-</section></main><footer>GeoMesh V4.4 · одно тороидальное Оверхаузеровское измерительное устройство · GitHub Pages</footer>
-<script src="model.js?v=4.4.0"></script><script src="fid.js?v=4.4.0"></script><script>
+</section></main><footer>GeoMesh V4.5 · одно тороидальное Оверхаузеровское измерительное устройство · GitHub Pages</footer>
+<script src="model.js?v=4.5.0"></script><script src="fid.js?v=4.5.0"></script><script>
 (function(){
 "use strict";
 const PI=Math.PI, $=s=>document.getElementById(s), M=window.GeoMeshV4, F=window.GeoMeshV4FID;
@@ -147,14 +162,28 @@ const fmt=(n,d=2)=>Number.isFinite(Number(n))?Number(n).toLocaleString('ru-RU',{
 const modeName=m=>m==='dual'?'Две частоты':'Одна частота';
 const errorKey=()=>scenario==='stress'?'conservativePT':'errorPT';
 function packInputs(){
- return {vesselWallMM:Number($('vesselWallMM').value),vesselEpsilonR:Number($('vesselEpsilonR').value),
+ return {rfArchitecture:$('rfArchitecture').value,
+  rfQReference:Number($('rfQReference').value),
+  rfSaturationPowerW:Number($('rfSaturationPowerW').value),
+  rfVolumeLoss:Number($('rfVolumeLoss').value),
+  rfAxialNonuniformity:Number($('rfAxialNonuniformity').value),
+  rfLiquidLossFraction:Number($('rfLiquidLossFraction').value),
+  ampNV:Number($('ampNV').value),readS:Number($('readS').value),
+  vesselWallMM:Number($('vesselWallMM').value),vesselEpsilonR:Number($('vesselEpsilonR').value),
  vesselTanDelta:Number($('vesselTanDelta').value),
  feedFactor:Number($('feedFactor').value),conductivity:Number($('conductivity').value),
  lossTangent:Number($('lossTangent').value),xi:Number($('xi').value),T2star:Number($('T2star').value),
   t2e:Number($('t2eNs').value)*1e-9,esrWidthMHz:Number($('esrWidthMHz').value)};
 }
 function validInputs(c){
- return c.vesselWallMM>=.3&&c.vesselWallMM<=1.2&&
+ return ['literature','radial'].includes(c.rfArchitecture)&&
+  c.rfQReference>=150&&c.rfQReference<=2500&&
+  c.rfSaturationPowerW>=.05&&c.rfSaturationPowerW<=2&&
+  c.rfVolumeLoss>=0&&c.rfVolumeLoss<=2&&
+  c.rfAxialNonuniformity>=0&&c.rfAxialNonuniformity<=.8&&
+  c.rfLiquidLossFraction>=.02&&c.rfLiquidLossFraction<=.9&&
+  c.ampNV>=.3&&c.ampNV<=5&&c.readS>=.5&&c.readS<=5&&
+  c.vesselWallMM>=.3&&c.vesselWallMM<=1.2&&
  c.vesselEpsilonR>=2&&c.vesselEpsilonR<=10&&c.vesselTanDelta>=0&&c.vesselTanDelta<=.03&&
  c.feedFactor>=.1&&c.feedFactor<=2&&c.conductivity>=0&&c.conductivity<=.2&&
  c.lossTangent>=.002&&c.lossTangent<=.3&&c.xi>=.01&&c.xi<=1&&c.T2star>=.1&&c.T2star<=8&&
@@ -206,6 +235,7 @@ function showSelected(){
  const p=selected;if(!p)return;
  let rows=[
  ['Конструкция','Высокий тор; общая LF-катушка'],
+ ['RF-топология',p.rfArchitecture==='literature'?'Литературный высокодобротный RF режим':'Симметричный радиальный контроль'],
  ['RF-программа',modeName(p.mode)],
  ['Сосуд Øнаруж / Øвнут',fmt(p.outer,2)+' / '+fmt(p.inner,2)+' мм'],
  ['Сосуд высота / скругление',fmt(p.height,2)+' / '+fmt(p.fillet,2)+' мм'],
@@ -218,14 +248,14 @@ function showSelected(){
  ['LC для приёма (параллельная)',fmt(p.coilTuneUF,3)+' мкФ'],
  ['Приёмное усиление / шум',fmt(p.rxGain,2)+' / '+fmt(p.rxNoiseNV,2)+' нВ/√Гц'],
  ['Толщина стенки / εᵣ стенки',fmt(p.vesselWallMM,2)+' мм / '+fmt(p.vesselEpsilonR,2)],
-  ['RF C: с двумя стенками / без стенок',fmt(p.rfCapPF,1)+' / '+fmt(p.rfCapBarePF,1)+' пФ'],
+  ['Радиальная C-геометрия (НЕ C высокодобротной RF-моды)',fmt(p.rfCapPF,1)+' / '+fmt(p.rfCapBarePF,1)+' пФ'],
   ['Доля RF-напряжения на жидкости',fmt(p.rfLiquidVoltageFraction*100,1)+'%'],
   ['Доля энергии RF-моды в жидкости / стенках',fmt(p.rfLiquidEnergyShare*100,1)+' / '+fmt(p.rfWallEnergyShare*100,1)+'%'],
- ['Согласующая RF-индуктивность',fmt(p.rfIndNH,2)+' нГн'],
- ['RF Q жидкости / общий Q',fmt(p.rfQDielectric,1)+' / '+fmt(p.rfQ,1)],
+ ['Радиальный LC-эквивалент (НЕ LC высокодобротной RF-моды)',fmt(p.rfIndNH,2)+' нГн'],
+ ['Эффективная Q-потерь / модельная Q RF',fmt(p.rfQDielectric,1)+' / '+fmt(p.rfQ,1)],
  ['RF P / t',fmt(p.rfPower,2)+' Вт / '+fmt(p.rfTime,2)+' с'],
- ['B₁ rms, квазистатика + κ',fmt(p.rfB1UT,2)+' мкТ'],
- ['RF напряжение rms на обкладках',fmt(p.rfDriveVrms,2)+' В'],
+ ['B₁ эквивалентное ESR-насыщению, мкТ',fmt(p.rfB1UT,2)+' мкТ'],
+ ['Напряжение идеального радиального C',p.rfArchitecture==='radial'?fmt(p.rfDriveVrms,2)+' В':'не определено для RF-моды'],
  ['Средний модуль DNP |ε|',fmt(p.dnpMean,2)+'×'],
   ['DNP со знаком, среднее ε',fmt(p.dnpSignedMean,2)+'×'],
   ['Коэффициент пространственной компенсации',fmt(p.dnpCancellation*100,1)+'%'],
@@ -237,7 +267,10 @@ function showSelected(){
  ['Импульс поле / ток',fmt(p.pulseMT,2)+' мТ / '+fmt(p.pulseCurrentA,3)+' А'],
  ['Время спада / мёртвое время',fmt(p.pulseOffUS,1)+' мкс / '+fmt(p.deadMS,2)+' мс'],
  ['Напряжение при нарастании',fmt(p.pulseRiseV,1)+' В'],
- ['Шум, худшая ориентация',fmt(p.errorPT,1)+' пТ / цикл (модель)'],
+ ['Шум, худшая ориентация',fmt(p.errorPT,1)+' пТ / цикл (MVP)'],
+ ['Шум при нормировке на цикл',fmt(p.resolutionPTsqrtHz,1)+' пТ√с (модель)'],
+ ['Длительность цикла',fmt(p.cycleS,2)+' с'],
+ ['RF тепло за цикл / средняя мощность',fmt(p.rfHeatJ,3)+' Дж / '+fmt(p.thermalMeanW,3)+' Вт'],
  ['Угловое отношение амплитуд',fmt(p.angleRatio,3)],
  ['Энергия полного цикла',fmt(p.energyJ,3)+' Дж']
  ];
@@ -249,19 +282,19 @@ function showSelected(){
  ['Среднее |DNP|',x=>fmt(x.dnpMean,1)],['RF-добротность',x=>fmt(x.rfQ,1)]]
  .map(([label,fn])=>{const a=p.mode==='single'?p:other,b=p.mode==='dual'?p:other;return '<tr><td>'+label+'</td><td>'+fn(a)+'</td><td>'+fn(b)+'</td></tr>'}).join('')+'</tbody></table>'):'Нет парного решения';
  $('quality').innerHTML=datumRows([
- ['Жидкость ограничивает RF-Q',p.rfQDielectric<p.rfQ*2.1?'Существенно':'Умеренно'],
+ ['RF Q и жидкость',p.rfArchitecture==='literature'?'Q из литературного опорного случая + эмпирические потери':'Q последовательного радиального диэлектрика'],
   ['Эффективность ESR, средняя',fmt(p.rfESRMean*100,2)+'% (предположенная химия)'],
   ['Средняя DNP с учётом знака',fmt(p.dnpSignedMean,2)+'× (при осевом поле)'],
   ['Компенсация противоположной поляризации',fmt((1-p.dnpCancellation)*100,1)+'% потерь (объёмная оценка)'],
   ['Сопоставимость с 1,69 пТ/√Гц','НЕТ: другая топология и единицы; RF не верифицирован'], 
- ['Радиальные электроды','B₁φ ∝ z · Eᵣ · κ только для выбранных граничных условий'],
- ['Коэффициент RF-вводов κ','Гипотеза, по умолчанию 1'],
- ['Индуктивность RF-согласования',fmt(p.rfIndNH,1)+' нГн'],
+ ['Радиальная RF-мода',p.rfArchitecture==='radial'?'Узел B₁ в средней плоскости (контроль)':'Не применяется к выбранной коаксиальной RF-гипотезе'],
+ ['Коэффициент RF-вводов κ','Переменный множитель неопределённой связи (не измерен)'],
+ ['Радиальный LC-эквивалент',p.rfArchitecture==='radial'?fmt(p.rfIndNH,1)+' нГн':'не задаёт реальное HFSS-согласование'],
  ['RF-нагрев за измерение',fmt(p.deltaTmK,2)+' мК, адиабат. оценка'],
  ['Систематическая heading-ошибка','НЕ РАССЧИТАНА'],
  ['Электродные вихревые токи','ТРЕБУЕТСЯ FEM / проверка разрезов'],
  ['Приём после импульса','Время — гипотеза схемы'],
- ['Модель спектра радикала','Две условные ESR-линии; химия не измерена'],['Проверка ESR-параметров',p.esrWidthMHz+1e-9>=p.esrHomHWHMMHz?'Согласованы в пределах лоренцевой модели':'ОШИБКА']
+ ['Модель спектра радикала','Две условные ESR-линии; P₁/₂ и T₁e/T₂e подлежат измерению'],['Проверка ESR-параметров',p.esrWidthMHz+1e-9>=p.esrHomHWHMMHz?'Согласованы в пределах лоренцевой модели':'ОШИБКА']
  ]);
  showKappaCheck(p);
  $('spinResults').textContent='Нажми «Проверить динамику» для интегрирования протонной прецессии именно в этой катушке.';
