@@ -31,10 +31,12 @@ const cfg={
  lf_nominal_frequency_hz:267.52218744e6*50e-6/(2*Math.PI),
  rf_nominal_input_power_w:chosen.rfPower,
  nominal_earth_field_uT:50,
- source_case_id:chosen.id,source_model_version:'4.3',source_rf_mode:chosen.mode,
+ source_case_id:chosen.id,source_model_version:'4.5',source_rf_mode:chosen.mode,
  source_conditional_error_pT_per_shot:chosen.errorPT,
+ source_rf_architecture:chosen.rfArchitecture,
+ source_cycle_s:chosen.cycleS,source_resolution_pt_sqrt_s:chosen.resolutionPTsqrtHz,
  source_cycle_energy_j:chosen.energyJ,
- source_status:'SCENARIO ONLY, not measured, not Maxwell FEM'
+ source_status:'V4.5 literature-anchored scenario only; RF mode extrapolated to torus, not measured or Maxwell FEM'
 };
 const buildup=cfg.vessel_wall_mm+cfg.copper_electrode_thickness_mm+cfg.rf_insulation_mm+
  cfg.winding_envelope_mm+cfg.epoxy_mm;
