@@ -1,0 +1,354 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>GeoMesh V4 · Оверхаузеровский тороидальный магнитометр</title>
+<meta name="description" content="Исследовательская параметрическая модель одной тороидальной головки с RF-электродами на цилиндрических стенках и общей импульсно-приёмной катушкой."/>
+<style>
+:root{color-scheme:dark;--bg:#0b1018;--panel:#111b29;--panel2:#172433;--border:#324558;--text:#e1eaf3;--muted:#96aec2;--a:#6dc5cf;--b:#e4a06a;--grid:#4a6375}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{border-bottom:1px solid var(--border);background:linear-gradient(120deg,#122234,#0b111b);padding:25px max(18px,calc((100% - 1300px)/2))}
+.topline{font:600 12px/1.5 monospace;color:var(--a);letter-spacing:.12em}h1{font-size:clamp(25px,4vw,39px);line-height:1.16;margin:7px 0 9px}header p{color:var(--muted);margin:0;max-width:1000px}
+nav{display:flex;flex-wrap:wrap;gap:10px;margin-top:17px}a{color:#82d6de;text-decoration:none}a:hover{text-decoration:underline}
+nav a{border:1px solid var(--border);border-radius:8px;padding:6px 11px;background:#142231}
+main{max-width:1330px;margin:auto;padding:16px;display:grid;gap:14px}.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;min-width:0}
+h2{margin:0 0 13px;font-size:19px;font-weight:680}h3{font-size:14px;margin:0 0 8px}
+.sub{color:var(--muted);font-size:12px}.layout{display:grid;grid-template-columns:minmax(290px,360px) minmax(0,1fr);gap:14px;align-items:start}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{min-width:0}.field label{display:block;color:var(--muted);font-size:12px;margin:0 0 4px}
+input,select,button{font:inherit}select,input[type=number]{width:100%;color:var(--text);background:#0d1622;border:1px solid #42586c;border-radius:8px;padding:8px}
+input[type=range]{width:100%;accent-color:#6dc5cf;margin-top:7px}
+button{border:1px solid #4a7681;color:var(--text);background:#193744;padding:9px 13px;border-radius:8px;cursor:pointer}
+button:hover{background:#28515d}button:disabled{opacity:.5;cursor:default}
+.slider{margin:9px 0}.slider .row{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:12px}
+.slider strong{color:var(--text)}
+.plots{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+canvas{display:block;width:100%;height:340px;touch-action:pan-y;background:#0d1724;border:1px solid #253b4e;border-radius:8px}
+#plot{touch-action:none}#device{touch-action:none}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:0 0 12px}
+.metric{background:#172634;border:1px solid #2c455a;border-radius:9px;padding:11px;min-width:0}
+.metric .num{font-size:23px;letter-spacing:-.02em;font-weight:660;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.metric .tag{font-size:11px;color:var(--muted)}
+.details{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+.drow{padding:6px 0;border-bottom:1px solid #26394a;display:flex;justify-content:space-between;gap:10px}
+.drow span:first-child{color:var(--muted)}.drow span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.pill{border-radius:5px;padding:2px 7px;font-size:11px;background:#283f4c;color:#dcf4f4}
+.caption{color:var(--muted);font-size:12px;margin:9px 0 0}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:12px}
+td,th{border-bottom:1px solid #2a3d4f;padding:7px 6px;text-align:right}
+th{color:var(--muted);font-weight:600}td:first-child,th:first-child{text-align:left}
+tr.clickable{cursor:pointer}tr.clickable:hover{background:#23394a}
+.crit{border-left:3px solid #b48c66;padding:8px 13px;color:#d4dfe7;background:#1a232e;border-radius:0 6px 6px 0}
+.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px}
+#status{font-size:12px;color:var(--muted)}.scroll{overflow:auto}
+footer{padding:25px;text-align:center;color:var(--muted)}
+@media(max-width:1000px){.layout{grid-template-columns:1fr}.plots{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.plots{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}canvas{height:295px}.details{grid-template-columns:1fr}}
+</style></head><body>
+<header><div class="topline">GEOMESH / RESEARCH MODEL V4.0 / 25 OCT 2026</div>
+<h1>Оверхаузеровский магнитометр · высокий тор</h1>
+<p>Одна жидкостная кольцевая полость со скруглённым прямоугольным сечением. Внутренний и наружный цилиндрические RF-электроды. Одна тороидальная катушка для низкочастотного отклонения и приёма FID. Только одна головка, без колонны.</p>
+<nav><a href="#workspace">Оптимизация</a><a href="#device-panel">3D-геометрия</a><a href="#details-panel">Электрика и RF</a><a href="FORMULAS.md">Все формулы и допущения</a><a href="model.js">Расчётный JavaScript</a><a href="../v3/">Архив V3</a></nav>
+</header>
+<main>
+<section class="panel"><div class="crit"><strong>Исследовательский расчёт, не паспортная чувствительность.</strong> В частности, радиальные RF-электроды создают электрическое поле, но величина и пространственная карта <i>B₁</i>, необходимого для насыщения ESR, без электродинамического решателя или измерения неизвестны. Здесь её задаёт явно регулируемый <i>коэффициент магнитного участия</i>. Систематическая heading-ошибка и магнитная восприимчивость материалов не вычисляются. Не использовать представленные пТ для метрологической аттестации или выбора готового датчика.</div></section>
+<div class="layout" id="workspace">
+<aside class="panel">
+<h2>Ограничения и физические сценарии</h2>
+<div class="slider"><div class="row"><span>Полный наружный Ø, мм</span><strong id="dMaxVal">100</strong></div><input type="range" id="dMax" min="60" max="100" value="100" step="1"/></div>
+<div class="slider"><div class="row"><span>Полная высота, мм</span><strong id="hMaxVal">100</strong></div><input type="range" id="hMax" min="60" max="100" value="100" step="1"/></div>
+<div class="slider"><div class="row"><span>Минимальный свободный канал, мм</span><strong id="bMinVal">10</strong></div><input type="range" id="bMin" min="10" max="40" value="10" step="1"/></div>
+<div class="slider"><div class="row"><span>Энергия за измерение, Дж</span><strong id="eMaxVal">8.0</strong></div><input type="range" id="eMax" min=".5" max="8" value="8" step=".1"/></div>
+<div class="fields">
+<div class="field"><label for="rfMode">RF-режим</label><select id="rfMode"><option value="all">Сравнить оба</option><option value="single">Одна частота</option><option value="dual">Две частоты</option></select></div>
+<div class="field"><label for="scenario">Отображаемая ошибка</label><select id="scenario"><option value="nominal">Номинальная модель</option><option value="stress">Условный стресс-сценарий</option></select></div>
+</div>
+<hr style="border:0;border-top:1px solid var(--border);margin:19px 0"/>
+<h3>Параметры раствора и RF (для полного пересчёта)</h3>
+<div class="field"><label for="etaB">Доля магнитной энергии RF в жидкости, η<sub>B</sub></label><input id="etaB" type="number" value=".18" min=".005" max=".5" step=".01"/></div>
+<div class="fields" style="margin-top:10px">
+<div class="field"><label for="conductivity">Электропроводность, С/м</label><input id="conductivity" type="number" min="0" max=".2" value=".004" step=".001"/></div>
+<div class="field"><label for="lossTangent">tan δ растворителя</label><input id="lossTangent" type="number" min=".002" max=".3" value=".030" step=".005"/></div>
+<div class="field"><label for="xi">Коэффициент связи ξ</label><input id="xi" type="number" min=".01" max="1" value=".46" step=".02"/></div>
+<div class="field"><label for="T2star">T₂*, с</label><input id="T2star" type="number" min=".1" max="8" value="2" step=".1"/></div>
+</div>
+<button style="width:100%;margin-top:12px" id="rebuild">Пересчитать все 5 000 конфигураций</button>
+<p id="status">Подготовка модели…</p>
+<button id="export" style="width:100%;margin-top:8px;background:#152632">Экспортировать текущие решения CSV</button>
+<p class="caption">Разделение мощности между RF-частотами просчитывается при той же исходной геометрии. Две частоты — не две частоты протонной прецессии.</p>
+</aside>
+<section class="panel">
+<h2>Пространство решений и Парето</h2>
+<div class="cards">
+<div class="metric"><div class="num" id="count">—</div><div class="tag">Конфигураций после фильтра</div></div>
+<div class="metric"><div class="num" id="frontcount">—</div><div class="tag">Недоминируемых</div></div>
+<div class="metric"><div class="num" id="besterror">—</div><div class="tag">Минимальная условная ошибка, пТ</div></div>
+<div class="metric"><div class="num" id="bestenergy">—</div><div class="tag">Минимальная энергия, Дж</div></div>
+</div>
+<canvas id="plot" aria-label="Вращаемое трёхмерное облако решений Парето"></canvas>
+<p class="caption">Оси: X — энергия (Дж), Y — шум на измерение (пТ), Z — габаритный объём без пустого канала (см³). Поверните пальцем. Нажмите точку для просмотра. Бирюзовые точки — один RF-тон, оранжевые — два. Крупные точки — фронт Парето.</p>
+<p class="caption">Оптимизируются только случайная ошибка, энергия и габаритный объём. Систематическая ошибка направления не подменяется неравномерностью амплитуды.</p>
+</section></div>
+<div class="plots">
+<section class="panel" id="device-panel"><h2>Выбранная головка · 3D</h2>
+<canvas id="device" aria-label="Вращаемая трёхмерная схема кольцевой головки"></canvas>
+<p class="caption">Условное 3D-представление. Бирюзовые поверхности — цилиндрические RF-электроды (наружная стенка), золотистые — внутренняя стенка; медные линии — <strong>одна и та же</strong> импульсно-приёмная обмотка. Количество изображённых витков уменьшено для читаемости.</p>
+<p class="caption">Рядом с RF-электродами нужны меры против низкочастотных замкнутых токовых контуров, например продольная сегментация. Их RF-эффект и магнитная восприимчивость ещё требуют отдельной проверки.</p>
+</section>
+<section class="panel" id="details-panel"><h2>Параметры выбранной конструкции</h2>
+<div id="chosen">Выберите точку Парето.</div>
+<button id="spinTest" style="margin-top:12px">Проверить динамику отклоняющего импульса (Bloch)</button>
+<p id="spinResults" class="caption">Расчёт выбранного импульса выполняется отдельно; исходный фронт использует ускоренную оценку адиабатичности.</p>
+</section>
+</div>
+<div class="plots">
+<section class="panel"><h2>Сравнение одной и двух RF-частот</h2><div id="pair"></div><p class="caption">Это две RF-программы одного и того же физического сосуда и той же общей низкочастотной катушки. При отсутствии измеренного ESR-спектра победитель зависит от гипотетических линий возбуждения.</p></section>
+<section class="panel"><h2>Контроль физической применимости</h2><div id="quality"></div></section>
+</div>
+<section class="panel"><h2>Перспективные варианты после фильтра</h2><div class="scroll"><table><thead><tr><th>№</th><th>RF</th><th>Ø × H, мм</th><th>Жидкость, мл</th><th>Витки</th><th>Шум, пТ</th><th>Энергия, Дж</th></tr></thead><tbody id="winners"></tbody></table></div></section>
+<section class="panel"><h2>Что именно вычислено и что ещё неизвестно</h2>
+<div class="details">
+<div><h3>Рассчитывается явно</h3><p class="caption">Объём скруглённого кольца; реальная упаковка провода; сопротивление и идеализированная индуктивность тора; электрическая ёмкость радиальных RF-электродов; предел RF-добротности от потерь жидкости; согласующая индуктивность; RF-энергия и нагрев за цикл; низкочастотная импульсная энергия; параллельный RLC-приём; распределённый сигнал FID и расчётная нижняя граница ошибки частоты; Bloch-прецессия протонов для выбранного импульса.</p></div>
+<div><h3>Пока требует измерений или 3D-поля</h3><p class="caption">Магнитное RF-поле, создаваемое именно этой парой радиальных электродов; реальные ESR-линии выбранного радикала; T₁e и T₂e; сольватация и перенос поляризации; магнитная восприимчивость жидкости, электродов и корпуса; паразитная емкость и токи утечки; защита и восстановление реального усилителя; полный комплексный FID при 3D-карте неоднородности поля. Все пТ сейчас модельные, а не измеренные.</p></div>
+</div>
+<p><a href="FORMULAS.md">Полный реестр уравнений, источников неопределённости и проверок</a> · <a href="model.js">Исходный код</a> · <a href="README.md">Описание ревизии</a></p>
+</section></main><footer>GeoMesh V4 · одно тороидальное Оверхаузеровское измерительное устройство · GitHub Pages</footer>
+<script src="model.js"></script><script>
+(function(){
+"use strict";
+const $=s=>document.getElementById(s), M=window.GeoMeshV4;
+let dataset=[],visible=[],front=[],selected=null,currentCfg={},stats={},scenario='nominal';
+let yaw=.64,pitch=.42,deviceYaw=.55,devicePitch=.42,plotPins=[];
+const fmt=(n,d=2)=>Number.isFinite(Number(n))?Number(n).toLocaleString('ru-RU',{maximumFractionDigits:d,minimumFractionDigits:0}):'—';
+const modeName=m=>m==='dual'?'Две частоты':'Одна частота';
+const errorKey=()=>scenario==='stress'?'conservativePT':'errorPT';
+function packInputs(){
+ return {etaMag:Number($('etaB').value),conductivity:Number($('conductivity').value),
+ lossTangent:Number($('lossTangent').value),xi:Number($('xi').value),T2star:Number($('T2star').value)};
+}
+function validInputs(c){
+ return c.etaMag>.004&&c.etaMag<=.5&&c.conductivity>=0&&c.conductivity<=.2&&
+ c.lossTangent>=.002&&c.lossTangent<=.3&&c.xi>=.01&&c.xi<=1&&c.T2star>=.1&&c.T2star<=8;
+}
+function clear(){selected=null;dataset=[];visible=[];front=[];$('chosen').textContent='Нет рассчитанных конструкций'}
+function rebuild(){
+ let c=packInputs();if(!validInputs(c)){alert('Проверь диапазоны физических параметров');return}
+ $('rebuild').disabled=true;$('status').textContent='Расчёт 5 000 вариантов (одна LF-катушка × два RF-режима)…';
+ setTimeout(function(){
+ try{const s=performance.now(),data=M.build(c,2500,20261025);dataset=data.points;stats=data.stats;currentCfg=c;
+ $('status').textContent='Готово: '+dataset.length+' решений; '+fmt(performance.now()-s,0)+' мс. Сгенерировано '+stats.trials+' базовых кандидатов.';
+ applyFilters(true);
+ }catch(e){$('status').textContent='Ошибка расчёта: '+e.message;console.error(e)}
+ finally{$('rebuild').disabled=false}
+ },40);
+}
+function applyFilters(reset){
+ if(!dataset.length)return;
+ const d=Number($('dMax').value),h=Number($('hMax').value),
+ bore=Number($('bMin').value),en=Number($('eMax').value),mode=$('rfMode').value;
+ scenario=$('scenario').value;
+ visible=dataset.filter(p=>p.od<=d&&p.hh<=h&&p.bore>=bore&&p.energyJ<=en&&(mode==='all'||p.mode===mode));
+ front=M.pareto(visible,scenario==='stress');
+ const key=errorKey();
+ $('count').textContent=fmt(visible.length,0);
+ $('frontcount').textContent=fmt(front.length,0);
+ $('besterror').textContent=visible.length?fmt(Math.min(...visible.map(p=>p[key])),1):'—';
+ $('bestenergy').textContent=visible.length?fmt(Math.min(...visible.map(p=>p.energyJ)),2):'—';
+ if(visible.length&&(reset||!selected||!visible.find(p=>p.id===selected.id))){
+  selected=visible.filter(p=>p.od<=90&&p.energyJ<=4).sort((a,b)=>a[key]-b[key])[0]||
+           visible.slice().sort((a,b)=>a[key]-b[key])[0];
+ }
+ $('winners').innerHTML=front.slice().sort((a,b)=>a[key]-b[key]).slice(0,14).map(p=>
+  '<tr class="clickable" data-id="'+p.id+'"><td>'+p.id+'</td><td>'+ (p.mode==='dual'?'2':'1')+'</td><td>'+
+   fmt(p.od,1)+' × '+fmt(p.hh,1)+'</td><td>'+fmt(p.volume,0)+'</td><td>'+p.turns+
+   '</td><td>'+fmt(p[key],1)+'</td><td>'+fmt(p.energyJ,2)+'</td></tr>').join('');
+ $('winners').querySelectorAll('[data-id]').forEach(el=>el.onclick=()=>chooseId(Number(el.dataset.id)));
+ if(!visible.length){$('chosen').textContent='Нет вариантов при текущих ограничениях';$('pair').textContent='—';$('quality').textContent='—'}
+ else showSelected();
+ drawPlot();drawDevice();
+}
+function chooseId(id){let p=dataset.find(x=>x.id===id);if(!p)return;selected=p;showSelected();drawDevice();drawPlot();}
+function datumRows(items){
+ return items.map(v=>'<div class="drow"><span>'+v[0]+'</span><span>'+v[1]+'</span></div>').join('');
+}
+function showSelected(){
+ const p=selected;if(!p)return;
+ let rows=[
+ ['Конструкция','Высокий тор; общая LF-катушка'],
+ ['RF-программа',modeName(p.mode)],
+ ['Сосуд Øнаруж / Øвнут',fmt(p.outer,2)+' / '+fmt(p.inner,2)+' мм'],
+ ['Сосуд высота / скругление',fmt(p.height,2)+' / '+fmt(p.fillet,2)+' мм'],
+ ['Полные габариты',fmt(p.od,2)+' × '+fmt(p.hh,2)+' мм'],
+ ['Свободный центральный канал',fmt(p.bore,2)+' мм'],
+ ['Объём жидкости',fmt(p.volume,1)+' мл'],
+ ['Катушка N / диаметр провода',p.turns+' / '+fmt(p.wire,2)+' мм'],
+ ['Намотка слоёв / меди',p.coilLayers+' / '+fmt(p.coilLengthM,1)+' м'],
+ ['R / L низкочастотной обмотки',fmt(p.coilR,2)+' Ом / '+fmt(p.coilLMH,2)+' мГн'],
+ ['LC для приёма (параллельная)',fmt(p.coilTuneUF,3)+' мкФ'],
+ ['Приёмное усиление / шум',fmt(p.rxGain,2)+' / '+fmt(p.rxNoiseNV,2)+' нВ/√Гц'],
+ ['RF-электроды C',fmt(p.rfCapPF,1)+' пФ'],
+ ['Согласующая RF-индуктивность',fmt(p.rfIndNH,2)+' нГн'],
+ ['RF Q жидкости / общий Q',fmt(p.rfQDielectric,1)+' / '+fmt(p.rfQ,1)],
+ ['RF P / t',fmt(p.rfPower,2)+' Вт / '+fmt(p.rfTime,2)+' с'],
+ ['B₁ rms, **гипотетически**',fmt(p.rfB1UT,2)+' мкТ'],
+ ['Усиление DNP, ср. модуль',fmt(p.dnpMean,1)+'×'],
+ ['Суммарная поглощённая RF-энергия',fmt(p.rfHeatJ,3)+' Дж'],
+ ['Адиабатический критерий (proxy)',fmt(p.tipRampFactor,3)],
+ ['Импульс поле / ток',fmt(p.pulseMT,2)+' мТ / '+fmt(p.pulseCurrentA,3)+' А'],
+ ['Время спада / мёртвое время',fmt(p.pulseOffUS,1)+' мкс / '+fmt(p.deadMS,2)+' мс'],
+ ['Напряжение при нарастании',fmt(p.pulseRiseV,1)+' В'],
+ ['Шум, худшая ориентация',fmt(p.errorPT,1)+' пТ / цикл (модель)'],
+ ['Угловое отношение амплитуд',fmt(p.angleRatio,3)],
+ ['Энергия полного цикла',fmt(p.energyJ,3)+' Дж']
+ ];
+ $('chosen').innerHTML='<div class="details">'+
+ '<div>'+datumRows(rows.slice(0,14))+'</div><div>'+datumRows(rows.slice(14))+'</div></div>';
+ const other=dataset.find(q=>q.baseId===p.baseId&&q.mode!==p.mode);
+ $('pair').innerHTML=other?('<table><thead><tr><th>При неизменной геометрии</th><th>Один RF-тон</th><th>Два RF-тона</th></tr></thead><tbody>'+
+ [['Ошибка, пТ',x=>fmt(x.errorPT,1)],['Энергия, Дж',x=>fmt(x.energyJ,3)],
+ ['Среднее |DNP|',x=>fmt(x.dnpMean,1)],['RF-добротность',x=>fmt(x.rfQ,1)]]
+ .map(([label,fn])=>{const a=p.mode==='single'?p:other,b=p.mode==='dual'?p:other;return '<tr><td>'+label+'</td><td>'+fn(a)+'</td><td>'+fn(b)+'</td></tr>'}).join('')+'</tbody></table>'):'Нет парного решения';
+ $('quality').innerHTML=datumRows([
+ ['Жидкость ограничивает RF-Q',p.rfQDielectric<p.rfQ*2.1?'Существенно':'Умеренно'],
+ ['Радиальные электроды','Электростатика; B₁ не рассчитано'],
+ ['Индуктивность RF-согласования',fmt(p.rfIndNH,1)+' нГн'],
+ ['RF-нагрев за измерение',fmt(p.deltaTmK,2)+' мК, адиабат. оценка'],
+ ['Систематическая heading-ошибка','НЕ РАССЧИТАНА'],
+ ['Электродные вихревые токи','ТРЕБУЕТСЯ FEM / проверка разрезов'],
+ ['Приём после импульса','Время — гипотеза схемы'],
+ ['Модель спектра радикала','Две условные ESR-линии']
+ ]);
+ $('spinResults').textContent='Нажми «Проверить динамику» для интегрирования протонной прецессии именно в этой катушке.';
+}
+function scaleCanvas(el){const dpr=Math.min(window.devicePixelRatio||1,2),w=el.clientWidth,h=el.clientHeight;
+ if(el.width!==Math.round(w*dpr)||el.height!==Math.round(h*dpr)){el.width=Math.round(w*dpr);el.height=Math.round(h*dpr)}
+ const x=el.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);return {ctx:x,w,h}
+}
+function drawPlot(){
+ let {ctx,w,h}=scaleCanvas($('plot'));ctx.clearRect(0,0,w,h);
+ ctx.fillStyle='#91aec1';ctx.font='12px system-ui';ctx.fillText('X · Энергия     Y · Погрешность     Z · Объём',12,20);
+ if(!visible.length){ctx.fillText('Нет допустимых конструкций',20,h/2);return}
+ const key=errorKey(),maxE=Math.max(...visible.map(p=>p.energyJ)),minE=Math.min(...visible.map(p=>p.energyJ));
+ const minS=Math.min(...visible.map(p=>p[key])),maxS=Math.max(...visible.map(p=>p[key]));
+ const minV=Math.min(...visible.map(p=>p.envelope)),maxV=Math.max(...visible.map(p=>p.envelope));
+ const fit=(v,a,b)=>Math.max(0,Math.min(1,(v-a)/(b-a||1)))-.5;
+ const project=(x,y,z)=>{
+  let x1=x*Math.cos(yaw)-z*Math.sin(yaw),z1=x*Math.sin(yaw)+z*Math.cos(yaw);
+  return {x:w/2+(x1*.72+y*.14)*Math.min(w,h)*.94,
+   y:h*.55+(z1*Math.sin(pitch)-y*Math.cos(pitch))*.72*Math.min(w,h)*.94,depth:z1*Math.cos(pitch)+y*Math.sin(pitch)};
+ };
+ function pos(p){
+  return project(fit(Math.log10(p.energyJ+.02),Math.log10(minE+.02),Math.log10(maxE+.02)),
+  fit(Math.log10(p[key]),Math.log10(minS),Math.log10(maxS)),fit(p.envelope,minV,maxV));
+ }
+ ctx.lineWidth=1;ctx.strokeStyle='#40566a';
+ for(let axis=0;axis<3;axis++){
+  let a=[-.5,-.5,-.5],b=a.slice();b[axis]=.5;
+  let q1=project(a[0],a[1],a[2]),q2=project(b[0],b[1],b[2]);
+  ctx.beginPath();ctx.moveTo(q1.x,q1.y);ctx.lineTo(q2.x,q2.y);ctx.stroke();
+ }
+ const fset=new Set(front.map(p=>p.id));plotPins=[];
+ let arr=visible.map(p=>{let z=pos(p);return {p,z,front:fset.has(p.id)}}).sort((a,b)=>a.z.depth-b.z.depth);
+ for(let r of arr){
+  if(!r.front){ctx.globalAlpha=.15;ctx.fillStyle=r.p.mode==='dual'?'#e4a06a':'#6dc5cf';ctx.beginPath();ctx.arc(r.z.x,r.z.y,1.5,0,2*Math.PI);ctx.fill();continue}
+  ctx.globalAlpha=.95;ctx.fillStyle=r.p.mode==='dual'?'#f4b781':'#89e2e7';
+  ctx.beginPath();ctx.arc(r.z.x,r.z.y,r.p.id===selected?.id?6:3.3,0,2*Math.PI);ctx.fill();
+  if(r.p.id===selected?.id){ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke()}
+  plotPins.push(r);
+ }ctx.globalAlpha=1;
+ ctx.fillStyle='#93acc0';ctx.fillText('Выбор по касанию · изменение ракурса перетаскиванием',12,h-12);
+}
+function drawDevice(){
+ let {ctx,w,h}=scaleCanvas($('device'));ctx.clearRect(0,0,w,h);
+ if(!selected){ctx.fillStyle='#91aec1';ctx.fillText('Выбери точку',14,20);return}
+ const p=selected;let ro=p.outer/2,ri=p.inner/2,half=p.height/2;
+ const scale=Math.min(w*.75,h*.67)/Math.max(p.od,p.hh);
+ function proj(x,y,z){
+  let X=x*Math.cos(deviceYaw)-y*Math.sin(deviceYaw),Y=x*Math.sin(deviceYaw)+y*Math.cos(deviceYaw);
+  return {x:w*.50+X*scale,y:h*.53-(z*Math.cos(devicePitch)+Y*Math.sin(devicePitch))*scale,
+     depth:Y*Math.cos(devicePitch)-z*Math.sin(devicePitch)};
+ }
+ function outlineRing(r,z,color,weight=1,alpha=1){
+  ctx.strokeStyle=color;ctx.lineWidth=weight;ctx.globalAlpha=alpha;ctx.beginPath();
+  for(let j=0;j<=96;j++){let t=2*PI*j/96,s=proj(r*Math.cos(t),r*Math.sin(t),z);
+   if(j===0)ctx.moveTo(s.x,s.y);else ctx.lineTo(s.x,s.y)}
+  ctx.stroke();ctx.globalAlpha=1;
+ }
+ function line3(points,color,width=1,alpha=1){
+  ctx.strokeStyle=color;ctx.lineWidth=width;ctx.globalAlpha=alpha;ctx.beginPath();
+  points.forEach(([x,y,z],i)=>{let s=proj(x,y,z);if(!i)ctx.moveTo(s.x,s.y);else ctx.lineTo(s.x,s.y)});
+  ctx.stroke();ctx.globalAlpha=1;
+ }
+ const bb=p.coilLayers*p.wire*1.12+.45,zz=half+bb,roW=ro+bb,riW=ri-bb;
+ // Tall rounded rectangular annulus: transparent wall grid and continuous electrode outlines
+ for(let j=0;j<48;j++){
+  let a=j*2*PI/48,b=(j+1)*2*PI/48;
+  line3([[ro*Math.cos(a),ro*Math.sin(a),-half],[ro*Math.cos(b),ro*Math.sin(b),-half],
+   [ro*Math.cos(b),ro*Math.sin(b),half],[ro*Math.cos(a),ro*Math.sin(a),half]],'#356b75',.7,.20);
+ }
+ outlineRing(ro,half,'#5da4b0',2,.85);outlineRing(ro,-half,'#44818b',1,.4);
+ outlineRing(ri,half,'#d7a25f',2,.8);outlineRing(ri,-half,'#ad824d',1,.45);
+ for(let i=0;i<24;i++){
+  let t=i*2*PI/24;
+  line3([[ro*Math.cos(t),ro*Math.sin(t),-half+2],[ro*Math.cos(t),ro*Math.sin(t),half-2]],'#4eb4c1',1.4,.37);
+  line3([[ri*Math.cos(t),ri*Math.sin(t),-half+2],[ri*Math.cos(t),ri*Math.sin(t),half-2]],'#e9ab60',1.4,.36);
+ }
+ // A subset of actual cross-sectional turns, evenly distributed azimuthally.
+ let wireTurns=[];
+ for(let i=0;i<58;i++){
+  let a=(i+.5)*2*PI/58;
+  let cp=Math.cos(a),sp=Math.sin(a);
+  const points=[[roW*cp,roW*sp,zz],[roW*cp,roW*sp,-zz],
+     [riW*cp,riW*sp,-zz],[riW*cp,riW*sp,zz],[roW*cp,roW*sp,zz]];
+  wireTurns.push({depth:proj((ro+ri)*cp/2,(ro+ri)*sp/2,0).depth,points});
+ }
+ wireTurns.sort((a,b)=>a.depth-b.depth);
+ for(let z of wireTurns)line3(z.points,'#d18b55',1.18,z.depth<0?.38:.85);
+ outlineRing(roW,zz,'#c38450',.9,.35);outlineRing(riW,zz,'#c38450',.9,.35);
+ ctx.fillStyle='#b9d3df';ctx.font='12px system-ui';
+ ctx.fillText('N = '+p.turns+' витков;  Ø '+fmt(p.od,1)+' × '+fmt(p.hh,1)+' мм',12,22);
+ ctx.fillStyle='#6fd0d6';ctx.fillRect(12,h-35,11,9);ctx.fillStyle='#b2c6d5';ctx.fillText('RF · наружный электрод',28,h-27);
+ ctx.fillStyle='#d6a16b';ctx.fillRect(12,h-18,11,9);ctx.fillStyle='#b2c6d5';ctx.fillText('LF · общая обмотка',28,h-10);
+}
+function drag(canvas,setFn){
+ let down=null;
+ canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);down={x:e.clientX,y:e.clientY,dragged:false}});
+ canvas.addEventListener('pointermove',e=>{
+  if(!down)return;
+  let dx=e.clientX-down.x,dy=e.clientY-down.y;
+  if(Math.abs(dx)+Math.abs(dy)>3)down.dragged=true;
+  setFn(dx,dy);down.x=e.clientX;down.y=e.clientY;
+ });
+ canvas.addEventListener('pointerup',e=>{
+  if(!down)return;
+  if(canvas.id==='plot'&&!down.dragged){
+   let r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,
+    nearest=plotPins.slice().sort((a,b)=>(a.z.x-x)**2+(a.z.y-y)**2-(b.z.x-x)**2-(b.z.y-y)**2)[0];
+   if(nearest&&Math.hypot(nearest.z.x-x,nearest.z.y-y)<18)chooseId(nearest.p.id);
+  }
+  down=null;
+ });
+}
+drag($('plot'),(dx,dy)=>{yaw+=dx*.009;pitch=Math.max(-1.35,Math.min(1.35,pitch+dy*.006));drawPlot()});
+drag($('device'),(dx,dy)=>{deviceYaw+=dx*.009;devicePitch=Math.max(-1.3,Math.min(1.3,devicePitch+dy*.006));drawDevice()});
+['dMax','hMax','bMin','eMax'].forEach(id=>$(id).addEventListener('input',()=>{
+ $(id+'Val').textContent=id==='eMax'?Number($(id).value).toFixed(1):$(id).value;applyFilters(false)}));
+['rfMode','scenario'].forEach(id=>$(id).addEventListener('change',()=>applyFilters(false)));
+$('rebuild').onclick=rebuild;
+$('spinTest').onclick=()=>{
+ if(!selected)return;
+ let a=M.blochPulse(selected,0,24,3),b=M.blochPulse(selected,90,24,3);
+ $('spinResults').innerHTML='Bloch-вращение в реальной форме импульса (ячейки по азимуту, шаг '+fmt(b.dtUS,2)+' мкс): '+
+ '<strong>при осевом поле '+fmt(a.ratio*100,1)+'%</strong>, при поперечном <strong>'+fmt(b.ratio*100,1)+'%</strong> '+
+ 'от идеального адиабатического отклонения. Это проверка *импульса*, не полная электронная DNP-модель. '+
+ 'Текущий Парето сохраняет ускоренную оценку импульса; эти проценты не перенесены в его пТ.';
+};
+$('export').onclick=()=>{
+ if(!visible.length)return;
+ const cols=['id','baseId','mode','outer','inner','height','fillet','od','hh','bore','volume','turns','wire','rfPower','rfTime','rfQ','rfCapPF','rfIndNH','rfB1UT','dnpMean','pulseMT','riseMS','pulseOffUS','deadMS','coilR','coilLMH','errorPT','conservativePT','energyJ','deltaTmK','headingBiasPT'];
+ const rows=[cols.join(',')].concat(visible.map(p=>cols.map(k=>p[k]===null?'':p[k]).join(',')));
+ const file=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download='GeoMesh_V4_filtered.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+window.addEventListener('resize',()=>{drawPlot();drawDevice()});
+try{M.validate()}catch(e){$('status').textContent='Самопроверка модели не пройдена: '+e.message;throw e}
+rebuild();
+})();
+</script></body></html>
