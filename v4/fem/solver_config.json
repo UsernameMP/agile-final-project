@@ -31,7 +31,8 @@
       "candidate": "quartz",
       "epsilon_r_real_illustrative": 3.8,
       "loss_tangent": "MEASURE",
-      "magnetic_susceptibility": "MEASURE"
+      "magnetic_susceptibility": "MEASURE",
+      "loss_tangent_illustrative": 0.001
     },
     "electrodes": {
       "material": "copper",
@@ -79,7 +80,24 @@
       "conductor_Q",
       "electrode_surface_current_A_per_m"
     ],
-    "field_power_normalization": "accepted power at actual port, not nominal generator output"
+    "field_power_normalization": "accepted power at actual port, not nominal generator output",
+    "analytical_control_case": {
+      "description": "Ideal axisymmetric coax with TWO dielectric vessel walls in series with liquid; no electrode slots or leads",
+      "liquid_OD_mm": 70,
+      "liquid_ID_mm": 36,
+      "liquid_height_mm": 75,
+      "electrode_axial_overlap_mm": 69,
+      "wall_thickness_mm": 0.7,
+      "eps_liquid": 72,
+      "eps_wall": 3.8,
+      "bare_liquid_only_capacitance_pF": 415.627,
+      "layered_series_capacitance_pF": 154.254,
+      "liquid_voltage_fraction": 0.37113516,
+      "accepted_power_W": 0.5,
+      "expected_loaded_Q_approx": 17.24,
+      "B1_rms_quasistatic_uT_approx": 1.48,
+      "note": "Screening benchmark ONLY. 3D FEM must resolve electrode feeds/returns and slots. B1 and Q are not independently measured."
+    }
   },
   "lf_study": {
     "physics": "AC/DC magnetic fields; transient switching and receive reciprocity",
