@@ -47,7 +47,7 @@ No Python runtime or backend is required to use the published website; it comput
 | Smallest conditional frequency-error noise | ~826 pT/shot |
 | Minimum energy among all candidates | ~0.366 J/shot |
 
-The absolute values **must not be compared** with Li et al.'s 1.69 pT/√Hz without matched bandwidth/time and validated electron-radical and RF parameters. The large modeled noise is *not proof that the hardware will have this noise*: it illustrates how strongly the RF electrode mode and DNP gain govern the forecast.
+The absolute values **must not be compared** with Li et al.'s 1.69 pT/√Hz without matched bandwidth/time and validated electron-radical and RF parameters. The large modeled noise is *not proof that the hardware will have this noise*: it illustrates how strongly the unverified RF electrode mode and DNP gain govern the forecast. **Critical parameter inconsistency:** `T2e=55 ns` requires homogeneous ESR HWHM ≥2.89 MHz, while V4 assumes 0.40 MHz; therefore the listed pT and Pareto noise rankings are not physically calibrated. The new viewer shows signed DNP polarization and spatial cancellation diagnostics. Read FORMULAS.md audit appendix.
 
 ## Critical unfinished physics
 
