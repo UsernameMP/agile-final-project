@@ -33,14 +33,22 @@ for(const p of front)for(const q of front){
 const fc={outer:72,inner:42,height:72,fillet:2,turns:600,wire:.45,rfPower:.62,rfTime:1.7,pulseMT:2.4,riseMS:5,holdMS:.6};
 const g1=M.geometry(fc,{...M.DEF}),g2=M.geometry(fc,{...M.DEF,conductivity:.04});
 assert.ok(g2.qLoad<g1.qLoad,'lossy fluid should decrease loaded Q');
+assert.ok(g1.qLoad>100,'literature Q not artificially capped at 23');
+const qRef=M.geometry(fc,{...M.DEF,rfQReference:1500});
+assert.ok(qRef.qLoad>g1.qLoad,'higher published Q reference increases effective RF Q');
+const gRad=M.geometry(fc,{...M.DEF,rfArchitecture:'radial'});
+assert.ok(gRad.qLoad<30,'original radial fully loaded capacitor remains a low-Q control');
+const narrow=M.estimate(fc,g1,'single',{...M.DEF,rfSaturationPowerW:.1});
+const broad=M.estimate(fc,g1,'single',{...M.DEF,rfSaturationPowerW:1.2});
+assert.ok(narrow.rfB1UT>broad.rfB1UT,'low saturation threshold raises B1 equivalent at fixed P');
 const f1=M.estimate(fc,g1,'single',{...M.DEF});
 const f2=M.estimate(fc,g2,'single',{...M.DEF,conductivity:.04});
 assert.ok(f2.rfB1UT>0&&f1.rfB1UT>0,'Maxwell-Ampere estimates remain finite');
 // Conductivity changes both RF losses and displacement/conduction currents; B1 need not be monotonic.
 // RF dielectric stack regression: real inner/outer vessel walls are in series with liquid.
 const sample={outer:72,inner:42,height:72,fillet:2,turns:600,wire:.45,rfPower:.62,rfTime:1.7,pulseMT:2.4,riseMS:5,holdMS:.6};
-const cwall={...M.DEF};
-const cBare={...M.DEF,vesselWallMM:0};
+const cwall={...M.DEF,rfArchitecture:'radial'};
+const cBare={...M.DEF,rfArchitecture:'radial',vesselWallMM:0};
 const gwall=M.geometry(sample,cwall),gBare=M.geometry(sample,cBare);
 assert.ok(gwall&&gBare,'baseline and zero-wall control geometry are admissible');
 const ri=sample.inner/2000,ro=sample.outer/2000,tw=cwall.vesselWallMM/1000;
@@ -59,7 +67,7 @@ assert.ok(swall.rfB1UT<sBare.rfB1UT,
  'at current assumed load, dielectric vessel walls should lower delivered liquid RF B1');
 for(const v of ['rfCapBarePF','rfLiquidVoltageFraction','rfLiquidEnergyShare','rfWallEnergyShare','rfWallHeatingJ'])
  assert.ok(Number.isFinite(swall[v]),'missing wall diagnostic '+v);
-console.log('PASS: cylindrical series dielectric C, participation, heating, winding build');
+console.log('PASS: layered radial control + literature RF-Q anchor, saturated ESR proxy and winding build');
 const ptest=M.blochPulse(a.points[0],90,16,4);
 assert.ok(Number.isFinite(ptest.ratio)&&ptest.samples>1000);
 const stress=M.pareto(a.points,true);assert.ok(stress.length>0);
