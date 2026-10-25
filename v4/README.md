@@ -1,6 +1,6 @@
-# GeoMesh Overhauser V4.3 — single high-toroid head
+# GeoMesh Overhauser V4.4 — single high-toroid head
 
-[Open V4 on GitHub Pages](https://usernamemp.github.io/agile-final-project/v4/?rev=4.3.0)
+[Open V4 on GitHub Pages](https://usernamemp.github.io/agile-final-project/v4/?rev=4.4.0)
 
 ## Architecture locked for V4
 
@@ -131,3 +131,15 @@ The research-screened candidate with minimum conditional sigma under package OD 
 
 Files: [3D STEP](fem/selected_90mm_4J/GeoMesh_V4_FEM_assembly.step), [JSON input](fem/selected_90mm_4J/candidate_config.json), [CAD manifest](fem/selected_90mm_4J/geometry_manifest.json).
 You can download any chosen case from the viewer as a CAD JSON, then invoke `python v4/fem/build_cad.py --config selected.json --out output`. The selected assembly has **seven CAD solids**, not 1350 explicit copper wire turns. No COMSOL/ANSYS Maxwell field calculation has been executed, and this case is not necessarily physically optimal.
+
+## V4.4 — phase-coherent synthetic FID and digital frequency estimator (2026-10-25)
+
+The [GitHub Pages V4 viewer](index.html) now offers **an on-demand selected-case complex IQ FID simulation**, not just the screening CRLB. The existing 5,000 cases and their Pareto ranking are intentionally unchanged.
+
+- `fid.js`: integrates 700 cylindrical-volume sample cells (7 radial × 5 axial × 20 azimuthal) using signed Overhauser enhancement, coil receive weighting, the currently *screened* nuclear-tip approximation, uniform proton `T2*` decay and an axial **scalar** linear gradient. It calculates a complex baseband FID after the pulse blanking interval. The common phase convention is a scenario assumption; phase-resolved RF FEM / local Bloch simulations have **not** been imported.
+- Adds Gaussian independent I/Q receiver noise from the assumed LF noise density and ideal antialias sampling, deterministic by seed. The default synthetic trial has a known +0.23 Hz offset. The digital estimator fits an unknown complex amplitude and searches coherent frequency offset on a coarse grid with local refinement; it **does not cheat by inserting the known offset into the fit**.
+- Displays ideal I, noisy I and noisy Q; outputs fitted frequency, its error in pT for that cycle, local white-noise conditional CRLB and 16/32/64-trial Monte Carlo standard deviation and bias. Angular choices: 0°, 45°, 90°.
+- The output is a *reproducible algorithmic experiment*, not a measurement of sensitivity, a calibrated pT number or a completed signal-chain design. The estimator assumes the same `T2*`, gradient and spatial weighting as its generator. This matched-model lower bound must be revisited with real phase-resolved B1, LF sensitivity, susceptibility, ADC quantization/jitter, filtering, power-line interference, magnetic 1/f noise and measured radical relaxation.
+- `test_fid.js` checks zero-noise frequency recovery, seeded reproducibility, geometry sampling, angular response and nonzero simulated noise. `test_browser_smoke.js` invokes the new published UI action. Both are run by `run-tests.sh` and the GitHub Actions regression workflow.
+
+**Important:** V4.4 does not redefine the Pareto `errorPT` from V4.3 as Monte Carlo standard deviation. Their forward models differ and must not be conflated or presented as agreement until the RF field, relaxation, pulse and receive circuit have been validated. The current frequency simulator handles one selected construction at a time to keep interactivity fast.
