@@ -259,7 +259,7 @@ function showSelected(){
   ['Доля RF-напряжения на жидкости',fmt(p.rfLiquidVoltageFraction*100,1)+'%'],
   ['Доля энергии RF-моды в жидкости / стенках',fmt(p.rfLiquidEnergyShare*100,1)+' / '+fmt(p.rfWallEnergyShare*100,1)+'%'],
  ['Радиальный LC-эквивалент (НЕ LC высокодобротной RF-моды)',fmt(p.rfIndNH,2)+' нГн'],
- ['Эффективная Q-потерь / модельная Q RF',fmt(p.rfQDielectric,1)+' / '+fmt(p.rfQ,1)],
+ ['Q радиального диэлектрика / RF модели',fmt(p.rfQDielectric,1)+' (другой тип поля) / '+fmt(p.rfQ,1)],
  ['RF P / t',fmt(p.rfPower,2)+' Вт / '+fmt(p.rfTime,2)+' с'],
  ['B₁ эквивалентное ESR-насыщению, мкТ',fmt(p.rfB1UT,2)+' мкТ'],
  ['Напряжение идеального радиального C',p.rfArchitecture==='radial'?fmt(p.rfDriveVrms,2)+' В':'не определено для RF-моды'],
@@ -289,7 +289,7 @@ function showSelected(){
  ['Среднее |DNP|',x=>fmt(x.dnpMean,1)],['RF-добротность',x=>fmt(x.rfQ,1)]]
  .map(([label,fn])=>{const a=p.mode==='single'?p:other,b=p.mode==='dual'?p:other;return '<tr><td>'+label+'</td><td>'+fn(a)+'</td><td>'+fn(b)+'</td></tr>'}).join('')+'</tbody></table>'):'Нет парного решения';
  $('quality').innerHTML=datumRows([
- ['RF Q и жидкость',p.rfArchitecture==='literature'?'Q из литературного опорного случая + эмпирические потери':'Q последовательного радиального диэлектрика'],
+ ['RF Q и жидкость',p.rfArchitecture==='literature'?'Измеренная опора + условная поправка; Q радиальной ёмкости НЕ является Q резонатора':'Q последовательного радиального диэлектрика'],
   ['Эффективность ESR, средняя',fmt(p.rfESRMean*100,2)+'% (предположенная химия)'],
   ['Средняя DNP с учётом знака',fmt(p.dnpSignedMean,2)+'× (при осевом поле)'],
   ['Компенсация противоположной поляризации',fmt((1-p.dnpCancellation)*100,1)+'% потерь (объёмная оценка)'],
