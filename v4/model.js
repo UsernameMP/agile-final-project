@@ -9,6 +9,7 @@ const PI=Math.PI, MU0=4e-7*PI, EPS0=8.8541878128e-12, KB=1.380649e-23,
 const DEF=Object.freeze({
  maxOD:100,maxH:100,minBore:10,minOD:60,minH:20,
  epsilonR:72,lossTangent:0.030,conductivity:0.004,efieldShare:0.94,
+ vesselWallMM:0.70,vesselEpsilonR:3.8,vesselTanDelta:0.001,electrodeCopperMM:0.05,rfStrayPF:10.0,
  qMetal:85,qCoupler:33,feedFactor:1.0,xi:0.46,leakage:0.80,
  t1e:3.0e-6,t2e:420e-9,esrHalfMHz:0.82,esrWidthMHz:0.40,
  tDNP:1.0,T2star:2.0,gradientNTM:20,ampNV:0.85,ampPA:0.08,
@@ -30,7 +31,8 @@ function roundingH(r,ri,ro,h,fil){
 function geometry(b,c){
  const w=(b.outer-b.inner)/2,h=b.height,f=b.fillet,ri=b.inner/2;
  if(w<6||f<.5||f>Math.min(w/2,h/2)||b.height<40)return null;
- let pitch=b.wire*1.12, rest=b.turns,layers=[],offset=c.rfBarrierMM;
+ if(!(c.vesselWallMM>=0&&c.vesselEpsilonR>1&&c.vesselTanDelta>=0&&c.electrodeCopperMM>=0))return null;
+ let pitch=b.wire*1.12, rest=b.turns,layers=[],offset=c.vesselWallMM+c.electrodeCopperMM+c.rfBarrierMM;
  for(let j=0;j<45&&rest>0;j++){
   let turnR=ri-offset-(j+.5)*pitch;
   let cap=Math.floor(.92*2*PI*turnR/pitch);
@@ -38,7 +40,7 @@ function geometry(b,c){
   let n=Math.min(cap,rest);layers.push([n,offset+(j+.5)*pitch]);rest-=n;
  }
  if(rest>0)return null;
- let buildup=c.rfBarrierMM+layers.length*pitch+c.epoxyMM;
+ let buildup=c.vesselWallMM+c.electrodeCopperMM+c.rfBarrierMM+layers.length*pitch+c.epoxyMM;
  let od=b.outer+2*buildup,hh=b.height+2*buildup,bore=b.inner-2*buildup;
  if(od<c.minOD||od>c.maxOD||hh<c.minH||hh>c.maxH||bore<c.minBore)return null;
  let section=w*h-(4-PI)*f*f;
@@ -76,20 +78,40 @@ function geometry(b,c){
  let dead=offSec+c.baseBlankS+tauRx*Math.log1p((c.pulseClamp*0.00015)/0.015);
  const hElectrode=(h-2*Math.max(1,f))/1000;
  if(hElectrode<=0)return null;
+ // Radial series dielectric: electrodes lie OUTSIDE the inner and outer vessel walls.
+ // Displacement D_r is continuous through both walls and liquid in this 1D coaxial limit.
+ // Use relative permittivities so each radial logarithm contributes ln(r2/r1)/epsilon_r.
  const eps=EPS0*c.epsilonR;
- const C=2*PI*eps*hElectrode/Math.log(ro/r0);
- const tanEff=c.lossTangent+c.conductivity/(WRF*eps);
- const qDie=1/(c.efieldShare*tanEff);
+ const wall=c.vesselWallMM/1000;
+ if(r0-wall<=0)return null;
+ const rfDliq=Math.log(ro/r0)/c.epsilonR;
+ const rfDwallIn=wall?Math.log(r0/(r0-wall))/c.vesselEpsilonR:0;
+ const rfDwallOut=wall?Math.log((ro+wall)/ro)/c.vesselEpsilonR:0;
+ const rfDsum=rfDliq+rfDwallIn+rfDwallOut;
+ const Cbare=2*PI*eps*hElectrode/Math.log(ro/r0);
+ const C=2*PI*EPS0*hElectrode/rfDsum;
+ const Cstray=c.rfStrayPF*1e-12;
+ const liqVoltageFraction=rfDliq/rfDsum;
+ const tanLiquid=c.lossTangent+c.conductivity/(WRF*eps);
+ const pStack=c.efieldShare*C/(C+Cstray);
+ const pLiquid=pStack*liqVoltageFraction;
+ const pWall=pStack*(1-liqVoltageFraction);
+ const tanEff=pLiquid*tanLiquid+pWall*c.vesselTanDelta;
+ const qDie=1/Math.max(tanEff,1e-12);
  const qLoad=1/(1/qDie+1/c.qMetal+1/c.qCoupler);
- const Lrf=1/(WRF*WRF*(C+10e-12)); // includes provisional 10 pF stray
+ const Lrf=1/(WRF*WRF*(C+Cstray)); // 10 pF default stray parallel to capacitor
  const volEff=(1.12*volume+17)*1e-6; // m³, fringe-field approximation
- const pradius=hElectrode/Math.log(ro/r0);
- const heatFrac=Math.min(1,qLoad/qDie);
+ const pradius=hElectrode*liqVoltageFraction/Math.log(ro/r0);
+ // RF heat in LIQUID only; wall/coil and port losses are not added to the liquid's delta-T proxy.
+ const heatFrac=Math.min(1,qLoad*pLiquid*tanLiquid);
+ const heatWallFrac=Math.min(1,qLoad*pWall*c.vesselTanDelta);
  const eenv=PI*(od*od-bore*bore)/4*hh/1000;
  return {od,hh,bore,volume,eenv,section,p0,length,R,L,gain,noise,qSeries,qLoaded,
   tuneUF:cy*1e6,layers:layers.length,buildup,pitch,ip,riseV,offUS:offSec*1e6,
-  pulseEnergy:epulse,dead,capPF:C*1e12,rfLNH:Lrf*1e9,qDie,qLoad,tanEff,
-  volEff,heatFrac,rfMaxERadial:pradius,he:hElectrode};
+  pulseEnergy:epulse,dead,capPF:C*1e12,capBarePF:Cbare*1e12,rfLNH:Lrf*1e9,qDie,qLoad,tanEff,
+  volEff,heatFrac,heatWallFrac,rfMaxERadial:pradius,he:hElectrode,
+  rfLiquidVoltageFraction:liqVoltageFraction,rfLiquidEnergyShare:pLiquid,rfWallEnergyShare:pWall,
+  rfLiquidLossTangent:tanLiquid,rfStackD:rfDsum,rfWallMM:c.vesselWallMM};
 }
 function makeBase(r){
  let outer=uniform(r,51,83), width=uniform(r,8.5,18.5),
@@ -118,10 +140,13 @@ function precompute(b,g,mode,c){
  // Consequently B_phi changes sign at mid-plane; RF B1 is NOT uniform in z.
  // Feed geometry / axial return currents are still unknown: feedFactor is a fitted proxy.
  let er=EPS0*c.epsilonR,cap=g.capPF*1e-12;
- let vrms=Math.sqrt(b.rfPower*g.qLoad/(WRF*cap));
+ // Voltage across the entire series dielectric stack, including matching stray-C load.
+ let vrms=Math.sqrt(b.rfPower*g.qLoad/(WRF*(cap+c.rfStrayPF*1e-12)));
  let admittance=Math.hypot(c.conductivity,WRF*er);
  let axialRms=g.he/Math.sqrt(12);
- let b1rms=MU0*admittance*vrms/(rmid*Math.log(outerRadius(b)/innerRadius(b)))*axialRms*c.feedFactor;
+ // Only the portion V_liquid=V_terminal*D_liquid/D_stack drives current in the liquid.
+ let b1rms=MU0*admittance*vrms*g.rfLiquidVoltageFraction/
+    (rmid*Math.log(outerRadius(b)/innerRadius(b)))*axialRms*c.feedFactor;
  let alpha0=Math.pow(GE*b1rms,2)*c.t1e*c.t2e;
  let spl=[];
  for(let esr of [-c.esrHalfMHz,c.esrHalfMHz]){
@@ -208,7 +233,11 @@ function estimate(b,g,mode,c,detail=false){
   od:g.od,hh:g.hh,bore:g.bore,volume:g.volume,envelope:g.eenv,
   errorPT:worst,conservativePT:worst*robustScale,energyJ:shotJ,
   angleRatio:amin/Math.max(amax,1e-30),worstTheta,ampUV:amin*1e6,
-  rfQ:g.qLoad,rfQDielectric:g.qDie,rfCapPF:g.capPF,rfIndNH:g.rfLNH,rfB1UT:pre.b1UT,rfDriveVrms:pre.vrms,esrWidthMHz:c.esrWidthMHz,t2eNS:c.t2e*1e9,esrHomHWHMMHz:1/(2*PI*c.t2e*1e6),
+  rfQ:g.qLoad,rfQDielectric:g.qDie,rfCapPF:g.capPF,rfCapBarePF:g.capBarePF,
+  rfLiquidVoltageFraction:g.rfLiquidVoltageFraction,rfLiquidEnergyShare:g.rfLiquidEnergyShare,
+  rfWallEnergyShare:g.rfWallEnergyShare,rfWallHeatingJ:b.rfPower*b.rfTime*g.heatWallFrac,
+  vesselWallMM:c.vesselWallMM,vesselEpsilonR:c.vesselEpsilonR,
+  rfIndNH:g.rfLNH,rfB1UT:pre.b1UT,rfDriveVrms:pre.vrms,esrWidthMHz:c.esrWidthMHz,t2eNS:c.t2e*1e9,esrHomHWHMMHz:1/(2*PI*c.t2e*1e6),
   rfHeatJ:heatJ,deltaTmK:deltaT*1000,rfESRMean:meanSat/Math.max(wn,1e-30),
   dnpMean:meanEps/Math.max(wn,1e-30),dnpSignedMean:signedEps/Math.max(wn,1e-30),dnpCancellation:Math.abs(signedEps)/Math.max(meanEps,1e-30),coilR:g.R,coilLMH:g.L*1000,coilLayers:g.layers,
   rxGain:g.gain,rxNoiseNV:g.noise*1e9,coilLengthM:g.length,
@@ -306,7 +335,7 @@ function validate(){
  let s1=estimate(b,g,'single',c),s2=estimate(b,g,'dual',c);
  if(!(s1.errorPT>0&&s2.errorPT>0))throw Error('noise');
  if(!(s1.energyJ<s2.energyJ))throw Error('extra channels energy');
- if(!(g.capPF>10&&g.rfLNH>0))throw Error('electrodes');
+ if(!(g.capPF>10&&g.rfLNH>0&&g.capPF<g.capBarePF&&g.rfLiquidVoltageFraction<1))throw Error('layered RF electrodes');
  let p=pareto([s1,s2]);
  if(!p.length)throw Error('pareto');
  return {ok:true,checks:8,fixture:{volumeML:g.volume,od:g.od,h:g.hh,bore:g.bore,
