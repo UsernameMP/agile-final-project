@@ -1,6 +1,6 @@
 <!doctype html><html lang="ru"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<title>GeoMesh V4 · Оверхаузеровский тороидальный магнитометр</title>
+<title>GeoMesh V4.1 · Оверхаузеровский тороидальный магнитометр</title>
 <meta name="description" content="Исследовательская параметрическая модель одной тороидальной головки с RF-электродами на цилиндрических стенках и общей импульсно-приёмной катушкой."/>
 <style>
 :root{color-scheme:dark;--bg:#0b1018;--panel:#111b29;--panel2:#172433;--border:#324558;--text:#e1eaf3;--muted:#96aec2;--a:#6dc5cf;--b:#e4a06a;--grid:#4a6375}
@@ -49,7 +49,7 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 </header>
 <main>
 <section class="panel"><div class="crit"><strong>Исследовательский расчёт, не паспортная чувствительность.</strong> Радиальные RF-электроды создают электрическое поле. Для симметричной квазистатической моды <i>B₁φ</i> оценивается из уравнения Ампера–Максвелла и <strong>имеет нуль в средней плоскости лишь для предположенной симметричной RF-моды</strong>. Реальная картина может меняться из-за RF-подвода, разрезов электродов и обратных токов: их влияние пока параметризовано неизвестным коэффициентом κ. Без 3D электродинамического расчёта или измерений нельзя считать этот магнитный профиль подтверждённым. Систематическая heading-ошибка и магнитная восприимчивость материалов не вычисляются. Не использовать представленные пТ для метрологической аттестации или выбора готового датчика.</div></section>
-<section class="panel"><div class="crit"><strong>Почему график показывает сотни пТ?</strong> В этом сценарии параметры жидкости и RF-электродов дают загруженную RF-добротность около 12 и слабое насыщение ESR. Кроме того, выбранная симметричная RF-мода имеет нуль B₁ на середине высоты, а положительная и инвертированная DNP-намагниченности отдельных слоёв могут взаимно компенсировать FID. Все три эффекта <strong>зависят от непроверенной модели RF-подвода</strong>. Дополнительно обнаружена несогласованность исходных данных ESR: при T₂e=55 нс однородная HWHM должна быть не меньше 2,89 МГц, тогда как задана 0,40 МГц. Поэтому абсолютные пТ и рейтинг вариантов по шуму <strong>пока физически не верифицированы</strong>. Это не измеренная чувствительность и не основание считать, что реальная головка будет иметь шум 800 пТ. Публикация Li et al. даёт <strong>1,69 пТ/√Гц</strong> для другой, экспериментально настроенной архитектуры; здесь выводятся <strong>пТ на цикл</strong>, поэтому показатели нельзя численно приравнивать.</div></section>
+<section class="panel"><div class="crit"><strong>Почему прежняя V4 показывала около 800 пТ?</strong> Исходная V4 использовала T₂e=55 нс совместно с ESR-полушириной 0,40 МГц, хотя для лоренцевой однородной линии они несовместимы. В V4.1 эти параметры согласованы и доступны для пересчёта; значение 800 пТ из прежнего сценария не следует считать свойством реальной головки. В предположенной RF-электродной моде загруженная RF-добротность всё ещё около 12 и степень насыщения ESR зависит от выбранного T₂e. Кроме того, выбранная симметричная RF-мода имеет нуль B₁ на середине высоты, а положительная и инвертированная DNP-намагниченности отдельных слоёв могут взаимно компенсировать FID. Все три эффекта <strong>зависят от непроверенной модели RF-подвода</strong>. В предыдущей версии 55 нс соответствовали минимальной однородной HWHM 2,89 МГц; теперь начальный сценарий T₂e=420 нс и HWHM=0,40 МГц внутренне согласован, но не измерен на нашем растворе. Поэтому абсолютные пТ и рейтинг вариантов по шуму <strong>пока физически не верифицированы</strong>. Это не измеренная чувствительность и не основание считать, что реальная головка будет иметь шум 800 пТ. Публикация Li et al. даёт <strong>1,69 пТ/√Гц</strong> для другой, экспериментально настроенной архитектуры; здесь выводятся <strong>пТ на цикл</strong>, поэтому показатели нельзя численно приравнивать.</div></section>
 <div class="layout" id="workspace">
 <aside class="panel">
 <h2>Ограничения и физические сценарии</h2>
@@ -68,8 +68,12 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <div class="field"><label for="conductivity">Электропроводность, С/м</label><input id="conductivity" type="number" min="0" max=".2" value=".004" step=".001"/></div>
 <div class="field"><label for="lossTangent">tan δ растворителя</label><input id="lossTangent" type="number" min=".002" max=".3" value=".030" step=".005"/></div>
 <div class="field"><label for="xi">Коэффициент связи ξ</label><input id="xi" type="number" min=".01" max="1" value=".46" step=".02"/></div>
-<div class="field"><label for="T2star">T₂*, с</label><input id="T2star" type="number" min=".1" max="8" value="2" step=".1"/></div>
+<div class="field"><label for="T2star">T₂*, с (протоны)</label><input id="T2star" type="number" min=".1" max="8" value="2" step=".1"/></div>
 </div>
+<div class="fields" style="margin-top:10px">
+<div class="field"><label for="t2eNs">T₂e электронов, нс</label><input id="t2eNs" type="number" min="30" max="2000" value="420" step="10"/></div>
+<div class="field"><label for="esrWidthMHz">Полуширина ESR, МГц</label><input id="esrWidthMHz" type="number" min=".1" max="12" value=".4" step=".1"/></div>
+</div><p class="caption">Проверка: наблюдаемая лоренцева полуширина ESR ≥ 1/(2πT₂e). 420 нс / 0,4 МГц — согласованный <strong>пример</strong>, не измерение.</p>
 <button style="width:100%;margin-top:12px" id="rebuild">Пересчитать все 5 000 конфигураций</button>
 <p id="status">Подготовка модели…</p>
 <button id="export" style="width:100%;margin-top:8px;background:#152632">Экспортировать текущие решения CSV</button>
@@ -80,7 +84,7 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <div class="cards">
 <div class="metric"><div class="num" id="count">—</div><div class="tag">Конфигураций после фильтра</div></div>
 <div class="metric"><div class="num" id="frontcount">—</div><div class="tag">Недоминируемых</div></div>
-<div class="metric"><div class="num" id="besterror">—</div><div class="tag">Минимальная условная ошибка, пТ</div></div>
+<div class="metric"><div class="num" id="besterror">—</div><div class="tag">Сценарный шум, пТ/цикл</div></div>
 <div class="metric"><div class="num" id="bestenergy">—</div><div class="tag">Минимальная энергия, Дж</div></div>
 </div>
 <canvas id="plot" aria-label="Вращаемое трёхмерное облако решений Парето"></canvas>
@@ -110,8 +114,8 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <div><h3>Пока требует измерений или 3D-поля</h3><p class="caption">3D RF-поле с учётом вводов, обратных токов и торцевых полей (текущий расчёт — квазистатика); реальные ESR-линии выбранного радикала; T₁e и T₂e; сольватация и перенос поляризации; магнитная восприимчивость жидкости, электродов и корпуса; паразитная емкость и токи утечки; защита и восстановление реального усилителя; полный комплексный FID при 3D-карте неоднородности поля. Все пТ сейчас модельные, а не измеренные.</p></div>
 </div>
 <p><a href="FORMULAS.md">Полный реестр уравнений, источников неопределённости и проверок</a> · <a href="model.js">Исходный код</a> · <a href="README.md">Описание ревизии</a></p>
-</section></main><footer>GeoMesh V4 · одно тороидальное Оверхаузеровское измерительное устройство · GitHub Pages</footer>
-<script src="model.js"></script><script>
+</section></main><footer>GeoMesh V4.1 · одно тороидальное Оверхаузеровское измерительное устройство · GitHub Pages</footer>
+<script src="model.js?v=4.1.1"></script><script>
 (function(){
 "use strict";
 const PI=Math.PI, $=s=>document.getElementById(s), M=window.GeoMeshV4;
@@ -122,15 +126,17 @@ const modeName=m=>m==='dual'?'Две частоты':'Одна частота';
 const errorKey=()=>scenario==='stress'?'conservativePT':'errorPT';
 function packInputs(){
  return {feedFactor:Number($('feedFactor').value),conductivity:Number($('conductivity').value),
- lossTangent:Number($('lossTangent').value),xi:Number($('xi').value),T2star:Number($('T2star').value)};
+ lossTangent:Number($('lossTangent').value),xi:Number($('xi').value),T2star:Number($('T2star').value),
+  t2e:Number($('t2eNs').value)*1e-9,esrWidthMHz:Number($('esrWidthMHz').value)};
 }
 function validInputs(c){
  return c.feedFactor>=.1&&c.feedFactor<=2&&c.conductivity>=0&&c.conductivity<=.2&&
- c.lossTangent>=.002&&c.lossTangent<=.3&&c.xi>=.01&&c.xi<=1&&c.T2star>=.1&&c.T2star<=8;
+ c.lossTangent>=.002&&c.lossTangent<=.3&&c.xi>=.01&&c.xi<=1&&c.T2star>=.1&&c.T2star<=8&&
+  c.t2e>=30e-9&&c.t2e<=2000e-9&&c.esrWidthMHz>=.1&&c.esrWidthMHz<=12;
 }
 function clear(){selected=null;dataset=[];visible=[];front=[];$('chosen').textContent='Нет рассчитанных конструкций'}
 function rebuild(){
- let c=packInputs();if(!validInputs(c)){alert('Проверь диапазоны физических параметров');return}
+ let c=packInputs();if(!validInputs(c)){$('status').textContent='Проверь допустимые диапазоны физических параметров';return}
  $('rebuild').disabled=true;$('status').textContent='Расчёт 5 000 вариантов (одна LF-катушка × два RF-режима)…';
  setTimeout(function(){
  try{const s=performance.now(),data=M.build(c,2500,20261025);dataset=data.points;stats=data.stats;currentCfg=c;
@@ -194,6 +200,8 @@ function showSelected(){
   ['DNP со знаком, среднее ε',fmt(p.dnpSignedMean,2)+'×'],
   ['Коэффициент пространственной компенсации',fmt(p.dnpCancellation*100,1)+'%'],
   ['Среднее насыщение ESR',fmt(p.rfESRMean*100,2)+'%'],
+   ['T₂e / однородная полуширина ESR',fmt(p.t2eNS,1)+' нс / '+fmt(p.esrHomHWHMMHz,2)+' МГц'],
+   ['Заданная полуширина ESR',fmt(p.esrWidthMHz,2)+' МГц'],
  ['Суммарная поглощённая RF-энергия',fmt(p.rfHeatJ,3)+' Дж'],
  ['Адиабатический критерий (proxy)',fmt(p.tipRampFactor,3)],
  ['Импульс поле / ток',fmt(p.pulseMT,2)+' мТ / '+fmt(p.pulseCurrentA,3)+' А'],
@@ -223,7 +231,7 @@ function showSelected(){
  ['Систематическая heading-ошибка','НЕ РАССЧИТАНА'],
  ['Электродные вихревые токи','ТРЕБУЕТСЯ FEM / проверка разрезов'],
  ['Приём после импульса','Время — гипотеза схемы'],
- ['Модель спектра радикала','Две условные ESR-линии']
+ ['Модель спектра радикала','Две условные ESR-линии; химия не измерена'],['Проверка ESR-параметров',p.esrWidthMHz+1e-9>=p.esrHomHWHMMHz?'Согласованы в пределах лоренцевой модели':'ОШИБКА']
  ]);
  $('spinResults').textContent='Нажми «Проверить динамику» для интегрирования протонной прецессии именно в этой катушке.';
 }
