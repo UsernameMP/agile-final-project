@@ -1,0 +1,186 @@
+{
+  "schema_version": "1.0",
+  "project": "GeoMesh single-head tall-toroid Overhauser magnetometer",
+  "scope": "One scalar Overhauser magnetometer head; no column, no second head, no gradientometer.",
+  "status": "solver input specification only; COMSOL/ANSYS not run; no validated RF B1, Q, FID or pT result",
+  "geometry": {
+    "cad": "generated/GeoMesh_V4_FEM_assembly.step",
+    "manifest": "generated/geometry_manifest.json",
+    "units": "mm",
+    "liquid_outer_diameter": 70,
+    "liquid_inner_diameter": 36,
+    "liquid_height": 75,
+    "liquid_edge_fillet_radius": 2,
+    "vessel_wall_thickness": 0.7,
+    "rf_electrode_thickness": 0.05,
+    "azimuthal_electrode_slit_width": 0.8,
+    "rf_insulation_mm": 0.45,
+    "lf_homogenized_coil_radial_build_mm": 3,
+    "epoxy_overmold_mm": 0.85
+  },
+  "materials": {
+    "radical_solution": {
+      "epsilon_r_real": 72,
+      "loss_tangent": 0.03,
+      "conductivity_S_per_m": 0.004,
+      "mu_r": 1,
+      "magnetic_susceptibility": "MEASURE: placeholder unknown",
+      "notes": "Illustrative dielectric parameters only; concentration and ESR must be measured."
+    },
+    "vessel": {
+      "candidate": "quartz",
+      "epsilon_r_real_illustrative": 3.8,
+      "loss_tangent": "MEASURE",
+      "magnetic_susceptibility": "MEASURE"
+    },
+    "electrodes": {
+      "material": "copper",
+      "conductivity_S_per_m": 58000000,
+      "metal_thickness_mm": 0.05,
+      "segmented": true
+    },
+    "coil": {
+      "material": "enameled copper",
+      "turns_illustrative": 900,
+      "homogenized_multiturn": true,
+      "insulation_and_fill_factor": "PARAMETRIC",
+      "notes": "Do not mesh 900 individual turns initially; validate winding direction around cross-section."
+    },
+    "epoxy": {
+      "dielectric": "MEASURE",
+      "magnetic_susceptibility": "MEASURE"
+    }
+  },
+  "rf_study": {
+    "physics": "complex frequency-domain Maxwell EM, including displacement currents and conductive loss",
+    "initial_frequency_MHz": 58.8,
+    "frequency_sweep_MHz": {
+      "start": 55,
+      "stop": 62,
+      "step": 0.25
+    },
+    "nominal_accepted_power_W": 0.5,
+    "ports": [
+      "one-sided electrode feed+explicit return",
+      "dual opposed symmetric feeds+explicit returns"
+    ],
+    "feed_geometry_status": "NOT IN CAD: build explicit straps, feed and return conductors before solving. Ideal terminals alone not sufficient for design ranking.",
+    "outputs": [
+      "complex B1_xyz_T across liquid",
+      "B1_perpendicular_to_B0",
+      "complex E_xyz_V_per_m",
+      "RF-loss-density_W_per_m3",
+      "accepted_P_W",
+      "reflected_P_W",
+      "S11",
+      "port_impedance",
+      "loaded_Q",
+      "dielectric_Q",
+      "conductor_Q",
+      "electrode_surface_current_A_per_m"
+    ],
+    "field_power_normalization": "accepted power at actual port, not nominal generator output"
+  },
+  "lf_study": {
+    "physics": "AC/DC magnetic fields; transient switching and receive reciprocity",
+    "nominal_B0_uT": 50,
+    "lf_turns_initial": 900,
+    "target_pulse_field_at_mean_radius_mT": 3,
+    "pulse_current": "COMPUTE FROM FEM coil calibration",
+    "drive_current_waveform": {
+      "ramp_ms": [
+        1.5,
+        3,
+        5,
+        8,
+        12
+      ],
+      "hold_ms": [
+        0.3,
+        0.6,
+        1,
+        1.5
+      ],
+      "fall_us": [
+        20,
+        50,
+        100,
+        300
+      ]
+    },
+    "outputs": [
+      "Btip_xyz_T_per_A",
+      "Brx_xyz_T_per_A",
+      "coil_R_ohm",
+      "coil_L_H",
+      "coil_parasitic_capacitance_F",
+      "switch_overvoltage_V",
+      "eddy_current_losses_in_electrodes",
+      "energy_pulse_J",
+      "receiver_recovery_s"
+    ],
+    "note": "Real LNA, clamp and FET device curves needed for numeric receiver_recovery_s, not inferable from FE field alone."
+  },
+  "susceptibility_study": {
+    "physics": "static magnetic scalar potential/magnetostatics with external B0",
+    "B0_uT": 50,
+    "orientations_deg": [
+      {
+        "theta": 0,
+        "phi": 0
+      },
+      {
+        "theta": 45,
+        "phi": 0
+      },
+      {
+        "theta": 90,
+        "phi": 0
+      },
+      {
+        "theta": 90,
+        "phi": 45
+      },
+      {
+        "theta": 90,
+        "phi": 90
+      }
+    ],
+    "outputs": [
+      "internal_B0_xyz_T",
+      "delta_magnitude_B0_T",
+      "orientation_dependent_bias_T"
+    ],
+    "note": "Requires signed magnetic susceptibilities and remanence specification of each material; do not claim pT heading error without them."
+  },
+  "quality_gates": {
+    "mesh_levels": 3,
+    "relative_convergence_targets": {
+      "B1_rms": 0.02,
+      "liquid_absorbed_power": 0.02,
+      "LF_inductance": 0.01,
+      "static_heading_bias": 0.05
+    },
+    "boundaries": [
+      "increase surrounding air domain until main outputs converge",
+      "compare 2D symmetry reference with 3D explicit feeds"
+    ],
+    "energy_conservation_tolerance": 0.03,
+    "checks": [
+      "RF power balance",
+      "capacitor analytical series dielectric control case",
+      "Btip approx mu0 NI/(2*pi*r) without electrode conduction",
+      "coil turn orientation",
+      "field phase reference",
+      "version and SI units recorded"
+    ]
+  },
+  "output_files": {
+    "rf": "rf_fields.csv",
+    "lf": "lf_fields.csv",
+    "static": "static_B0_fields.csv",
+    "metadata": "study_provenance.json",
+    "all_csv_units": "SI with coordinate and complex phasor conventions in header"
+  },
+  "interpretation": "FEM only produces EM fields/losses, not DNP polarization or magnetometer pT noise; requires measured radical ESR parameters and separate Bloch-Torrey + amplifier/ADC processing."
+}
