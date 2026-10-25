@@ -42,10 +42,10 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 @media(max-width:1000px){.layout{grid-template-columns:1fr}.plots{grid-template-columns:1fr 1fr}}
 @media(max-width:700px){.plots{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}canvas{height:295px}.details{grid-template-columns:1fr}}
 </style></head><body>
-<header><div class="topline">GEOMESH / RESEARCH MODEL V4.0 / 25 OCT 2026</div>
+<header><div class="topline">GEOMESH / RESEARCH MODEL V4.4 / 25 OCT 2026</div>
 <h1>Оверхаузеровский магнитометр · высокий тор</h1>
 <p>Одна жидкостная кольцевая полость со скруглённым прямоугольным сечением. Внутренний и наружный цилиндрические RF-электроды <strong>снаружи диэлектрической стенки</strong>. Одна тороидальная катушка для низкочастотного отклонения и приёма FID. Только одна головка, без колонны.</p>
-<nav><a href="#workspace">Оптимизация</a><a href="#device-panel">3D-геометрия</a><a href="#details-panel">Электрика и RF</a><a href="FORMULAS.md">Все формулы и допущения</a><a href="model.js">Расчётный JavaScript</a><a href="../v3/">Архив V3</a></nav>
+<nav><a href="#workspace">Оптимизация</a><a href="#device-panel">3D-геометрия</a><a href="#details-panel">Электрика и RF</a><a href="#fid-panel">Комплексный FID</a><a href="FORMULAS.md">Все формулы и допущения</a><a href="model.js">Расчётный JavaScript</a><a href="../v3/">Архив V3</a></nav>
 </header>
 <main>
 <section class="panel"><div class="crit"><strong>Исследовательский расчёт, не паспортная чувствительность.</strong> Радиальные RF-электроды создают электрическое поле. Для симметричной квазистатической моды <i>B₁φ</i> оценивается из уравнения Ампера–Максвелла и <strong>имеет нуль в средней плоскости лишь для предположенной симметричной RF-моды</strong>. Реальная картина может меняться из-за RF-подвода, разрезов электродов и обратных токов: их влияние пока параметризовано неизвестным коэффициентом κ. Без 3D электродинамического расчёта или измерений нельзя считать этот магнитный профиль подтверждённым. Систематическая heading-ошибка и магнитная восприимчивость материалов не вычисляются. Не использовать представленные пТ для метрологической аттестации или выбора готового датчика.</div></section>
@@ -112,7 +112,7 @@ footer{padding:25px;text-align:center;color:var(--muted)}
 <p class="caption">Готовая STEP-сборка контрольного расчётного варианта №2332: <a href="fem/selected_90mm_4J/GeoMesh_V4_FEM_assembly.step" download>скачать STEP</a> · <a href="fem/selected_90mm_4J/candidate_config.json">параметры</a> · <a href="fem/selected_90mm_4J/geometry_manifest.json">объёмы и размерности</a>. Это НЕ результат FEM-моделирования.</p>
 <p id="spinResults" class="caption">Расчёт выбранного импульса выполняется отдельно; исходный фронт использует ускоренную оценку адиабатичности.</p>
 <hr style="border:0;border-top:1px solid var(--border);margin:19px 0"/>
-<h3>V4.4 · комплексный FID и оценка частоты</h3>
+<h3 id="fid-panel">V4.4 · комплексный FID и оценка частоты</h3>
 <p class="caption">Рассчитывается только выбранная головка. Пространственные знаковые вклады DNP, неоднородность поля по оси, T₂*, мёртвое время общей катушки и шум приёмника формируют IQ-сигнал. Частота извлекается цифровым согласованным оценивателем; повторные циклы показывают разброс. Фазы RF-поля и локальный Bloch-импульс пока не известны из FEM: приведённый сигнал <strong>условный</strong>.</p>
 <div class="fields" style="margin-top:10px">
 <div class="field"><label for="fidAngle">Угол поля к оси тора</label><select id="fidAngle"><option value="0">0° · осевой</option><option value="45">45°</option><option value="90">90° · поперечный</option></select></div>
