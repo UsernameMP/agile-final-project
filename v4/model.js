@@ -161,7 +161,7 @@ function estimate(b,g,mode,c,detail=false){
      let gamma=Math.sqrt(c.b0*c.b0+betaGeom*betaGeom+2*c.b0*betaGeom*x);
      let tip=((betaGeom+c.b0*x)*(1-x*x))/gamma;
      let p=ePolar(pre,rr,z,phi,th,c,b);
-     let weight=dV*Math.abs(p.epsilon)*MU0*b.turns/(2*PI*rr)*
+     let weight=dV*p.epsilon*MU0*b.turns/(2*PI*rr)*
                  tip*rampFactor*offFactor;
      A+=weight; azMom+=weight*z;volW+=weight;
      if(th===0){meanSat+=p.sat*dV;meanEps+=Math.abs(p.epsilon)*dV;wn+=dV;}
