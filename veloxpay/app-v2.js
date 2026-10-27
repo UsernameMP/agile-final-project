@@ -52,6 +52,7 @@ function drawFlow(o,r){
  box(s,810,156,218,82,"Бюджет РФ","Налоги: "+rub(r.taxRf)+" млн ₽","gray","taxT");
  box(s,810,343,218,86,"Узбекские собственники","На руки: "+rub(r.receivedUz)+" млн ₽","amber","payout");
  connection(s,"M532 67 L532 157","Капитал / займ",rub(r.capT+val(o,"loanT"))+" млн ₽",540,112,"capital","foreign");
+ if(two&&r.interLoan>0)connection(s,o.interLoanDir==="t2p"?"M680 231 Q730 275 676 346":"M676 346 Q735 270 680 231","Внутригрупповой заём",rub(r.interLoan)+" млн ₽",824,269,"interLoan","foreign");
  if(two&&o.parent==="subsidiary")connection(s,"M610 242 Q741 282 615 334","Вклад матери в дочку",rub(r.capP)+" млн ₽",786,283,"capitalShare","foreign");
  else if(two)connection(s,"M650 67 Q735 80 700 340 L681 368","Капитал Processing",rub(r.capP+val(o,"loanP"))+" млн ₽",784,92,"capitalShare","foreign");
  connection(s,"M282 235 L385 205","Внешняя выручка",rub(r.techExt)+" млн ₽",332,182,"dev","main");
@@ -78,13 +79,15 @@ function resultsTable(o,r){
  html+=tr("Заработная плата",r.two?val(o,"payT"):val(o,"payT")+val(o,"payP"),r.two?val(o,"payP"):0,val(o,"payT")+val(o,"payP"));
  html+=tr("Страховые взносы",r.contribT,r.contribP,r.contribT+r.contribP);
  html+=tr("Проценты + роялти + иностранные услуги",r.interestT+val(o,"royalty")+val(o,"foreignSvc"),r.interestP,r.interestT+r.interestP+val(o,"royalty")+val(o,"foreignSvc"));
+ html+=tr("Проценты по займу между ООО",r.two?(o.interLoanDir==="t2p"?r.interLoanInterest:-r.interLoanInterest):0,r.two?(o.interLoanDir==="t2p"?-r.interLoanInterest:r.interLoanInterest):0,0);
  html+=tr("Прибыль до налога",r.profitT,r.profitP,r.profitT+r.profitP,"subtotal");
  html+=tr("Налог на прибыль / УСН",r.profitTaxT,r.profitTaxP,r.profitTaxT+r.profitTaxP);
  html+=tr("НДС начисленный",r.outVatT,r.outVatP,r.outVatT+r.outVatP);
  html+=tr("НДС к вычету",r.inputVatT,r.inputVatP,r.inputVatT+r.inputVatP);
  html+=tr("НДС к уплате / (возмещению)",r.vatT,r.vatP,r.vatT+r.vatP);
  html+=tr("Чистая прибыль",r.netT,r.netP,r.netT+r.netP,"total");
- html+=tr("Вклад + займы",r.capT+val(o,"loanT"),r.capP+(r.two?val(o,"loanP"):0),val(o,"capital")+val(o,"loanT")+(r.two?val(o,"loanP"):0));
+ html+=tr("Вклад + внешние займы",r.capT+val(o,"loanT"),r.capP+(r.two?val(o,"loanP"):0),val(o,"capital")+val(o,"loanT")+(r.two?val(o,"loanP"):0));
+ html+=tr("Внутригрупповой заём (основной долг)",r.two?(o.interLoanDir==="t2p"?-r.interLoan:r.interLoan):0,r.two?(o.interLoanDir==="t2p"?r.interLoan:-r.interLoan):0,0);
  html+=tr("Остаток после распределения",r.availableT,r.availableP,r.cashGroup,"subtotal");
  html+=tr("Налог РФ с дивидендов узбекских участников",r.whtDividend,0,r.whtDividend);
  html+=tr("Другие удержания с выплат",r.taxInterest+r.taxRoyalty+r.russianHoldTax,0,r.taxInterest+r.taxRoyalty+r.russianHoldTax);
@@ -142,7 +145,7 @@ function render(){
  $("procUz").disabled=o.parent==="subsidiary"&&o.structure==="two"||o.procOwn==="foreign"||o.structure==="one";
  $("techUz").disabled=o.techOwn==="foreign";
  $("parent").disabled=o.structure==="one";
- $("taxP").disabled=o.structure==="one";$("vatP").disabled=o.structure==="one";$("loanP").disabled=o.structure==="one";
+ $("taxP").disabled=o.structure==="one";$("vatP").disabled=o.structure==="one";$("loanP").disabled=o.structure==="one";["interLoan","interLoanDir","interLoanRate","interLoanRepay"].forEach(k=>{$(k).disabled=o.structure==="one"});
 }
 
 function renderLegalGraph(o,r){
