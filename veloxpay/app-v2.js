@@ -133,6 +133,7 @@ function comparison(o,r){
  });
 }
 function render(){
+ if($("structure").value==="two"&&$("parent").value==="subsidiary"){$("procOwn").value=$("techOwn").value;$("procUz").value=$("techUz").value}
  let o=gather(),r=result(o);
  $("metrics").innerHTML=metric("GMV клиентских операций",val(o,"gmv"),"млн ₽ · не выручка")+metric("Собственная выручка",r.totalSales,"млн ₽ · без внутреннего оборота")+metric("Налоги в РФ",r.taxRf,"млн ₽ · в т.ч. НДС")+metric("Налоговая нагрузка РФ + Узб.",r.taxAll,"млн ₽ · по допущениям")+metric("Узбекским собственникам",r.receivedUz,"млн ₽ · включая возврат займа",true,r.receivedUz<0);
  drawFlow(o,r);resultsTable(o,r);bars(r);cash(o,r);legal(o,r);comparison(o,r);
