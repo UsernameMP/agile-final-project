@@ -51,6 +51,10 @@
 <div class="field"><label>Реестровые лицензии: освобождение НДС</label><select id="licenseExempt"><option value="no">Нет / не подтверждено</option><option value="yes">Да, отдельное правовое подтверждение</option></select></div></div>
 <div class="panel highlight"><div class="panel-title"><span class="number">06</span><h2>Расчёты и выплаты</h2></div>
 <div class="field"><label>Processing → Technology: услуги / ПО</label><input id="interco" type="number" min="0" value="18"></div>
+<div class="field"><label>Внутригрупповой заём, млн ₽</label><input id="interLoan" type="number" min="0" value="0"></div>
+<div class="field"><label>Направление внутригруппового займа</label><select id="interLoanDir"><option value="t2p">Technology → Processing</option><option value="p2t">Processing → Technology</option></select></div>
+<div class="field"><label>Проценты по внутригрупповому займу, %</label><input id="interLoanRate" type="number" min="0" max="50" value="10"></div>
+<div class="field"><label>Возврат внутригруппового займа за год, %</label><input id="interLoanRepay" type="number" min="0" max="100" value="0"></div>
 <div class="field"><label>Операционные расходы второго ООО</label><input id="adminExtra" type="number" min="0" value="3"></div>
 <div class="field"><label>Technology → Узбекистан: роялти</label><input id="royalty" type="number" min="0" value="0"></div>
 <div class="field"><label>Technology → Узбекистан: услуги</label><input id="foreignSvc" type="number" min="0" value="0"></div>
