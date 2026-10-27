@@ -93,6 +93,7 @@ function showDetail(q,r,btn){
 }
 function render(){
  const r=compute(),o=r.opt,b=r.base;
+ el("take-rate").textContent="Эффективная собственная комиссия: "+(v("gmv")? (100*v("proc")/v("gmv")).toFixed(3).replace(".",",")+"% GMV":"GMV не задан");
  el("invest").textContent=m(v("capital"));
  el("model-label").textContent=r.two?"2 ООО · ОСНО":"1 ООО · ОСНО";
  el("technology").querySelector("small").textContent=r.two?"TECHNOLOGY · ОЭЗ: "+(r.sez?"гипотеза":"нет"):"ОДНО ООО · PROCESSING + TECHNOLOGY";
@@ -113,7 +114,8 @@ function render(){
  el("optim").textContent=m(o.toOwner);
  const difference=o.toOwner-b.toOwner;
  el("delta").textContent=(difference>=0?"+":"")+m(difference);
- el("result-status").textContent=r.eligible?"ГИПОТЕЗА · НЕ ВЕРИФИЦИРОВАНО":"ЛЬГОТНАЯ ВЕТВЬ НЕ ВЫБРАНА";
+ el("result-status").textContent=(!r.two&&r.sez&&r.other>.10)?"РИСК: ДОЛЯ ИНОЙ ДЕЯТЕЛЬНОСТИ "+Math.round(r.other*100)+"%":r.eligible?"ГИПОТЕЗА · НЕ ВЕРИФИЦИРОВАНО":"ЛЬГОТНАЯ ВЕТВЬ НЕ ВЫБРАНА";
+ el("owner-assumption").textContent=r.control==="foreign"?"Выплаты рассчитаны для условных 100% узбекского участия, удержание дивидендов 15% — модельное допущение, не применение СИДН.":"При российском контроле для иллюстрации принята узбекская доля 49%; её фактический размер и права на доход нужно согласовать отдельно. Удержание 15% — допущение.";
  el("profit-tax").textContent=m(o.taxT+o.taxP);
  el("vat-tax").textContent=m(o.vat);
  el("social-tax").textContent=m(o.socT+o.socP);
