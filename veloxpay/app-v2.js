@@ -44,7 +44,7 @@ function drawFlow(o,r){
  [["main","#0b9781"],["foreign","#4d78ad"],["minor","#bd8b42"]].forEach(([id,c])=>{let m=el("marker",{id:"ar"+id,viewBox:"0 0 10 10",refX:9,refY:5,markerWidth:7,markerHeight:7,orient:"auto"},defs);el("path",{d:"M0 0 L10 5 L0 10Z",fill:c},m)});
  const two=r.two;
  // nodes
- box(s,390,10,285,57,"Узбекистан / инвесторы","Вклад: "+rub(val(o,"capital"))+" · займы: "+rub(val(o,"loanT")+val(o,"loanP")),"gray","capital");
+ box(s,390,10,285,57,"Узбекистан / инвесторы","Вклад: "+rub(val(o,"capital"))+" · займы: "+rub(val(o,"loanT")+(r.two?val(o,"loanP"):0)),"gray","capital");
  box(s,22,201,260,70,"Заказчики Technology","Разработка • лицензии • поддержка","gray","dev");
  box(s,22,342,260,77,"Клиенты / банк-партнёр","GMV: "+rub(val(o,"gmv"))+" млн ₽","blue","gmv");
  box(s,385,157,300,85,two?"VeloxPay Technology":"VeloxPay · единое ООО","Выручка извне: "+rub(r.techExt)+" млн ₽",r.blocked?"amber":"mint","dev");
@@ -52,7 +52,8 @@ function drawFlow(o,r){
  box(s,810,156,218,82,"Бюджет РФ","Налоги: "+rub(r.taxRf)+" млн ₽","gray","taxT");
  box(s,810,343,218,86,"Узбекские собственники","На руки: "+rub(r.receivedUz)+" млн ₽","amber","payout");
  connection(s,"M532 67 L532 157","Капитал / займ",rub(r.capT+val(o,"loanT"))+" млн ₽",540,112,"capital","foreign");
- if(two)connection(s,"M650 67 Q735 80 700 340 L681 368","Капитал Processing",rub(r.capP+val(o,"loanP"))+" млн ₽",784,92,"capitalShare","foreign");
+ if(two&&o.parent==="subsidiary")connection(s,"M610 242 Q741 282 615 334","Вклад матери в дочку",rub(r.capP)+" млн ₽",786,283,"capitalShare","foreign");
+ else if(two)connection(s,"M650 67 Q735 80 700 340 L681 368","Капитал Processing",rub(r.capP+val(o,"loanP"))+" млн ₽",784,92,"capitalShare","foreign");
  connection(s,"M282 235 L385 205","Внешняя выручка",rub(r.techExt)+" млн ₽",332,182,"dev","main");
  if(two){
  connection(s,"M282 379 L385 378","Комиссии/сервисы",rub(r.procExt)+" млн ₽",333,354,"fee","main");
@@ -141,7 +142,7 @@ function render(){
  $("procUz").disabled=o.parent==="subsidiary"&&o.structure==="two"||o.procOwn==="foreign"||o.structure==="one";
  $("techUz").disabled=o.techOwn==="foreign";
  $("parent").disabled=o.structure==="one";
- $("taxP").disabled=o.structure==="one";$("vatP").disabled=o.structure==="one";
+ $("taxP").disabled=o.structure==="one";$("vatP").disabled=o.structure==="one";$("loanP").disabled=o.structure==="one";
 }
 
 function renderLegalGraph(o,r){
