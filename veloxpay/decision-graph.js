@@ -80,7 +80,7 @@ function drawRules(){
 }
 function mermaid(stages){
 let lines=["flowchart LR","classDef valid fill:#e3f6ed,stroke:#13936d,color:#136f55;","classDef conditional fill:#fff3d4,stroke:#c58c2b,color:#865b17;","classDef blocked fill:#fde7e8,stroke:#bd4954,color:#a12f40;","classDef inactive fill:#f7f9fc,stroke:#d5deea,color:#8393a8;"];
-stages.forEach((s,i)=>s.options.forEach((v,j)=>{const id=s.letter+j;const name=(s.letter+": "+v.label).replace(/"/g,"'");lines.push(id+'["'+name+'"]');lines.push("class "+id+" "+(v.chosen?v.status.toLowerCase():(v.status==="BLOCKED"?"blocked":"inactive"))+";")}));
+stages.forEach((s,i)=>s.options.forEach((v,j)=>{const id=s.letter+j;const name=(s.letter+": "+v.label).replace(/"/g,"'");lines.push(id+'["'+name+'"]');lines.push("class "+id+" "+(v.value===s.selected?v.status.toLowerCase():(v.status==="BLOCKED"?"blocked":"inactive"))+";")}));
 for(let i=0;i<stages.length-1;i++){let a=stages[i],b=stages[i+1],ia=a.options.findIndex(x=>x.value===a.selected),ib=b.options.findIndex(x=>x.value===b.selected);lines.push(a.letter+ia+" ==> "+b.letter+ib);b.options.forEach((v,j)=>{if(j!==ib)lines.push(a.letter+ia+" -.-> "+b.letter+j)})}
 return lines.join("\n");
 }
