@@ -1,5 +1,5 @@
 "use strict";
-const IDLIST="year structure parent techOwn techUz procOwn procUz sez accredited registry taxT vatT taxP vatP priceMode overCap capital capitalShare loanT loanP loanRate loanReturn gmv fee market bank payP costP inputP dev license support qual payT costT inputT licenseExempt interco adminExtra royalty foreignSvc payout divWht otherWht uzTax".split(" ");
+const IDLIST="year structure parent techOwn techUz procOwn procUz sez accredited registry taxT vatT taxP vatP priceMode overCap capital capitalShare loanT loanP loanRate loanReturn gmv fee market bank payP costP inputP dev license support qual payT costT inputT licenseExempt interco adminExtra royalty foreignSvc payout divWht otherWht uzTax interLoan interLoanDir interLoanRate interLoanRepay".split(" ");
 const $=id=>document.getElementById(id);
 const initial={};function gather(){let o={};IDLIST.forEach(k=>{o[k]=$(k).value});return o}
 const val=(o,id)=>Math.max(0,Number(o[id])||0);
@@ -32,6 +32,7 @@ function rule(o){
  if(o.sez==="yes")add("CONDITIONAL","Деятельность и инвестиции ОЭЗ","Требуются соглашение резидента, фактическая ТВД, раздельный учёт; с четвёртого календарного года подлежит проверке ст. 56.1 НК РФ.","sez");
  if(o.techOwn==="russian"||o.procOwn==="russian")add("CONDITIONAL","Реальный российский контроль","Участие, голоса, управление и экономические права должны соответствовать действительному контролю; номинальное владение не допускается.","acc");
  if(o.registry==="yes")add("UNVERIFIED","Право на реестровую льготу","Наличие российской доли недостаточно: права на ПО, выплаты иностранным правообладателям и функциональные исключения требуют проверки.","registry");
+ if(val(o,"interLoan")>0&&two)add("CONDITIONAL","Внутригрупповой заём","Заём между российскими ООО требует отдельного договора, процентных условий, графика и проверки реальной возвратности. Проценты облагаются отдельно от основного долга.","tax");
  if(val(o,"interco")>0&&two)add("CONDITIONAL","Внутригрупповые услуги","Встречный платёж принимается только за реально выполненную разработку, лицензирование либо поддержку по экономически обоснованным условиям.","tax");
  if(val(o,"royalty")+val(o,"foreignSvc")>0)add("UNVERIFIED","Выплаты за рубеж","Действительные права и услуги, рыночность цен, налог у источника, международное соглашение и валютный контроль требуют документального подтверждения.","payout");
  if(o.licenseExempt==="yes"&&(o.registry!=="yes"||foreignT))add("BLOCKED","Освобождение лицензии от НДС","Заявлено освобождение НДС для реестровой лицензии без подтверждённой допустимой реестровой структуры.","registry");
@@ -39,6 +40,7 @@ function rule(o){
  if(o.licenseExempt==="yes")add("UNVERIFIED","Исключения из НДС-льготы ПО","Платёжная функциональность ПО может подпадать под исключения из подп.26 п.2 ст.149 НК РФ. Применение льготы требует оценки функционала.","vat");
  if(Number(o.year)>=2030&&o.sez==="yes")add("UNVERIFIED","Ст. 56.1 НК РФ","В модели отсутствуют накопленные показатели инвестиций, НИОКР и налоговой экономии для проверки права на льготу.","tax");
  if(o.priceMode==="inclusive")add("CONDITIONAL","Цены включают НДС","Модель уменьшает базовую выручку на рассчитанный НДС. При разных ставках меняются собственные доходы и прибыль каждой компании.","vat");
+ if(!two&&val(o,"interLoan")>0)add("UNVERIFIED","Внутригрупповой заём при одном ООО","Внутренний договор займа между подразделениями одного юридического лица невозможен; сумма не учитывается.","tax");
  if(!two&&val(o,"loanP")>0)add("UNVERIFIED","Займ Processing при одном ООО","Отдельной Processing не существует: займ для второго ООО игнорируется в расчёте. Используется займ Technology.","tax");
  if(val(o,"interco")>0&&!two)add("CONDITIONAL","Внутри одного ООО","Внутренние услуги между направлениями одного ООО не являются выручкой/расходом между налогоплательщиками; введённая сумма не применяется.","tax");
  if(val(o,"gmv")>0)add("CONDITIONAL","Законность процессинга","Обычное ООО не является оператором перевода денег. Платёжные функции определяются договором с банком, статусом агрегатора и №161-ФЗ.","payments");
@@ -97,11 +99,13 @@ function result(o){
  const interestT=val(o,"loanT")*val(o,"loanRate")/100;
  const interestP=two?val(o,"loanP")*val(o,"loanRate")/100:0;
  const royalties=val(o,"royalty"),foreignServices=val(o,"foreignSvc");
+ const interLoan=two?val(o,"interLoan"):0,interLoanInterest=interLoan*val(o,"interLoanRate")/100,interLoanReturned=interLoan*frac(o,"interLoanRepay");
+ const techLender=o.interLoanDir==="t2p";
  const costsT=val(o,"costT")+(two?0:val(o,"bank")+val(o,"costP"))+(two?0:0)+nonRecT;
  const costsP=two?val(o,"bank")+val(o,"costP")+val(o,"adminExtra")+nonRecP:0;
  const expT=two?payrollT:payrollT+payrollP;
- const profitT=(two?techSales:totalSales)-costsT-expT-contribT-interestT-royalties-foreignServices;
- const profitP=two?procSales-inter-costsP-payrollP-contribP-interestP:0;
+ const profitT=(two?techSales:totalSales)-costsT-expT-contribT-interestT-royalties-foreignServices+(two?(techLender?interLoanInterest:-interLoanInterest):0);
+ const profitP=two?procSales-inter-costsP-payrollP-contribP-interestP+(techLender?-interLoanInterest:interLoanInterest):0;
  function profitTax(regime,pbt,revenue,insurance,profile,accredited){
   if(regime==="usn6")return Math.max(revenue*.06*0.5,revenue*.06-Math.min(revenue*.06*.5,insurance));
   if(regime==="usn15")return Math.max(revenue*.01,positive(pbt)*.15);
@@ -112,7 +116,9 @@ function result(o){
   return positive(pbt)*rate;
  }
  const itAcc=o.accredited==="yes"&&!r.foreignT;
- const profitTaxT=profitTax(tTax,profitT,two?techSales:totalSales,contribT,two?1:sezRatio,itAcc);
+ const loanNonProfile=two&&techLender&&interLoanInterest>0?interLoanInterest/(techSales+interLoanInterest):0;
+ if(loanNonProfile>0&&o.sez==="yes")add("UNVERIFIED","Процентный доход Technology","Проценты по внутригрупповому займу не признаны профильной ТВД автоматически; ставка ОЭЗ приблизительно распределяется по доле доходов.","sez");
+ const profitTaxT=profitTax(tTax,profitT,two?techSales:totalSales,contribT,(two?1:sezRatio)*(1-loanNonProfile),itAcc);
  const profitTaxP=two?profitTax(pTax,profitP,procSales,contribP,0,false):0;
  let netT=profitT-profitTaxT,netP=profitP-profitTaxP;
  // Conditions of foreign remittances and withholding are separately adjustable.
@@ -138,15 +144,15 @@ function result(o){
  const receivedUz=foreignIncome-uzIncomeTax+loanReturn; // no automatic Uz tax on return of principal
  const taxRf=profitTaxT+profitTaxP+vatT+vatP+contribT+contribP+whtDividend+taxInterest+taxRoyalty+russianHoldTax;
  const taxAll=taxRf+uzIncomeTax;
- const availableT=capT+val(o,"loanT")+netT-loanBackT-divT+(sub?divP-russianHoldTax:0);
- const availableP=two?capP+val(o,"loanP")+netP-loanBackP-divP:0;
+ const availableT=capT+val(o,"loanT")+netT-loanBackT-divT+(sub?divP-russianHoldTax:0)+(two?(techLender?-interLoan+interLoanReturned:interLoan-interLoanReturned):0);
+ const availableP=two?capP+val(o,"loanP")+netP-loanBackP-divP+(techLender?interLoan-interLoanReturned:-interLoan+interLoanReturned):0;
  const cashGroup=availableT+availableP;
  if(availableT<0||availableP<0)add("CONDITIONAL","Отрицательный денежный остаток","По нормализованному расчёту одной из компаний не хватает финансирования после расходов, налогов и распределения. Нужна проверка cash flow и очередности платежей.","tax");
  if(vatT<0||vatP<0)add("UNVERIFIED","Возмещение НДС","Отрицательный НДС учтён как возврат/зачёт в том же году; реальные сроки возмещения могут создавать кассовый разрыв.","vat");
  if(o.sez==="yes"&&tTax==="osno")add("CONDITIONAL","Срок льготной ставки ОЭЗ","Ставка 2% предполагает первые пять прибыльных лет резидента. Фактическая дата первого прибыльного года требует проверки.","sez");
  let blocked=r.issues.some(x=>x.state==="BLOCKED");
  // approximate monthly cash flow, accrual taxes normalized /12, dividends and principal in December
- let cashT=capT+val(o,"loanT"),cashP=two?capP+val(o,"loanP"):0,months=[];
+ let cashT=capT+val(o,"loanT")+(two?(techLender?-interLoan:interLoan):0),cashP=two?capP+val(o,"loanP")+(techLender?interLoan:-interLoan):0,months=[];
  const annualFlowT=netT+(sub?divP-russianHoldTax:0),annualFlowP=two?netP-divP*(sub?0:1):0;
  for(let i=1;i<=12;i++){
   cashT+=netT/12;
@@ -156,6 +162,7 @@ function result(o){
    if(two&&!sub)cashP-=divP;
    cashT-=divT;
    cashT-=loanBackT;if(two)cashP-=loanBackP;
+   if(two){cashT+=(techLender?interLoanReturned:-interLoanReturned);cashP+=(techLender?-interLoanReturned:interLoanReturned)}
   }
   months.push({month:i,T:cashT,P:two?cashP:0,group:cashT+(two?cashP:0)});
  }
@@ -163,6 +170,6 @@ function result(o){
   ...r,blocked,year,techExt,procExt,techSales,procSales,totalSales,inter,vatT,vatP,outVatT,outVatP,inputVatT,inputVatP,nonRecT,nonRecP,
   contribT,contribP,interestT,interestP,costsT,costsP,profitT,profitP,profitTaxT,profitTaxP,netT,netP,
   russianHoldTax,divT,divP,ownerDiv,whtDividend,taxInterest,taxRoyalty,uzIncomeTax,loanReturn,receivedUz,
-  taxRf,taxAll,availableT,availableP,cashGroup,capT,capP,ownUzT,ownUzP,qualRatio,sezRatio,canItRate,months,thresh
+  taxRf,taxAll,availableT,availableP,cashGroup,capT,capP,interLoan,interLoanInterest,interLoanReturned,ownUzT,ownUzP,qualRatio,sezRatio,canItRate,months,thresh
  };
 }
