@@ -1,0 +1,31 @@
+
+.graph-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:13px}
+.graph-tabs{display:flex;gap:4px;background:#eef3fa;padding:4px;border-radius:9px}
+.graph-tabs button{border:0;background:transparent;color:#506583;padding:8px 12px;border-radius:7px;font-weight:700}
+.graph-tabs button[aria-selected=true]{color:#fff;background:#265fad;box-shadow:0 2px 7px #17509a25}
+.graph-legend{display:flex;align-items:center;gap:11px;flex-wrap:wrap;font-size:11px;color:#5e728d}
+.graph-key{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px}
+.graph-scroller{width:100%;overflow-x:auto;overflow-y:hidden;border:1px solid #e0e9f3;border-radius:12px;background:linear-gradient(#fff,#f7faff);scrollbar-color:#bed0e6 transparent}
+.graph-svg{display:block;min-width:1700px;width:100%;height:auto}
+.graph-svg.money{min-width:910px}
+.graph-svg text{font-family:Inter,"Segoe UI",system-ui,sans-serif}
+.graph-svg .node-rect{transition:fill .12s,stroke .12s;stroke-width:1.5}
+.graph-svg .node{cursor:pointer;outline:none}
+.graph-svg .node:focus .node-rect,.graph-svg .node:hover .node-rect{stroke-width:3;filter:drop-shadow(0 2px 5px #27426730)}
+.graph-svg .node.locked{cursor:help}
+.graph-stage-name{font-size:12px;font-weight:800;fill:#314a6e}
+.graph-stage-sub{font-size:10px;fill:#8092a7}
+.graph-label{font-size:12.5px;font-weight:730}
+.graph-detail{font-size:10.5px}
+.graph-edge{fill:none;stroke-width:1.4;stroke:#bbcbdc;stroke-dasharray:4 5;opacity:.62}
+.graph-edge.active{stroke:#159575;stroke-width:3.5;stroke-dasharray:none;opacity:1}
+.graph-edge.blocked{stroke:#ba3b48;stroke-dasharray:4 3;stroke-width:1.7;opacity:.85}
+.graph-explanation{margin-top:12px;padding:12px 14px;border-left:3px solid #4785cb;background:#f4f8fd;border-radius:9px;min-height:74px}
+.graph-explanation b{display:block;font-size:12px}
+.graph-explanation p{margin:3px 0 0;font-size:12px;color:#536881}
+.graph-explanation a{font-size:11px}
+.graph-flags{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0;font-size:11px}
+.graph-flags span{border:1px solid #dce7f4;padding:4px 8px;border-radius:7px;background:#f7faff;color:#536981}
+.graph-toolbar button.graph-export{border:1px solid #cbdbee;background:#fff;border-radius:8px;color:#245a95;padding:7px 10px;font-weight:650;font-size:11px}
+.graph-help{font-size:11px;color:#6d8199;margin:8px 0 0}
+@media(max-width:760px){.graph-tabs{width:100%}.graph-tabs button{flex:1}.graph-scroller{margin-left:0}.graph-legend{gap:7px}}
