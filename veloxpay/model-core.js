@@ -28,12 +28,14 @@ function rule(o){
  if(!two&&o.sez==="yes"&&o.taxT!=="osno")add("CONDITIONAL","ОЭЗ и УСН","Ставка по налогу на прибыль ОЭЗ не снижает налог УСН; право резидентства и применимость режима проверяются отдельно.","sez");
  if(two&&o.sez==="yes"&&o.taxT!=="osno")add("CONDITIONAL","Ставка ОЭЗ при УСН","Пониженный налог на прибыль не действует при применении УСН.","tax");
  if(two&&sub)add("CONDITIONAL","Промежуточные дивиденды","Дивиденды дочерней Processing в пользу материнской Technology имеют самостоятельный режим; модель использует 13% удержания как сценарный параметр, возможные освобождения требуют подтверждения.","tax");
+ if(o.techOwn==="russian"&&val(o,"capital")>0)add("CONDITIONAL","Происхождение средств капитала","При российском большинстве вклад только узбекской стороны не соответствует автоматически структуре долей; необходимы вклады других участников или иное финансирование.","tax");
  if(o.sez==="yes")add("CONDITIONAL","Деятельность и инвестиции ОЭЗ","Требуются соглашение резидента, фактическая ТВД, раздельный учёт; с четвёртого календарного года подлежит проверке ст. 56.1 НК РФ.","sez");
  if(o.techOwn==="russian"||o.procOwn==="russian")add("CONDITIONAL","Реальный российский контроль","Участие, голоса, управление и экономические права должны соответствовать действительному контролю; номинальное владение не допускается.","acc");
  if(o.registry==="yes")add("UNVERIFIED","Право на реестровую льготу","Наличие российской доли недостаточно: права на ПО, выплаты иностранным правообладателям и функциональные исключения требуют проверки.","registry");
  if(val(o,"interco")>0&&two)add("CONDITIONAL","Внутригрупповые услуги","Встречный платёж принимается только за реально выполненную разработку, лицензирование либо поддержку по экономически обоснованным условиям.","tax");
  if(val(o,"royalty")+val(o,"foreignSvc")>0)add("UNVERIFIED","Выплаты за рубеж","Действительные права и услуги, рыночность цен, налог у источника, международное соглашение и валютный контроль требуют документального подтверждения.","payout");
  if(o.licenseExempt==="yes"&&(o.registry!=="yes"||foreignT))add("BLOCKED","Освобождение лицензии от НДС","Заявлено освобождение НДС для реестровой лицензии без подтверждённой допустимой реестровой структуры.","registry");
+ if(o.licenseExempt==="yes")add("UNVERIFIED","Раздельный НДС на ПО","Вычеты по общим расходам при сочетании облагаемых и освобождённых лицензионных услуг требуют раздельного учёта; прогноз использует упрощение.","vat");
  if(o.licenseExempt==="yes")add("UNVERIFIED","Исключения из НДС-льготы ПО","Платёжная функциональность ПО может подпадать под исключения из подп.26 п.2 ст.149 НК РФ. Применение льготы требует оценки функционала.","vat");
  if(Number(o.year)>=2030&&o.sez==="yes")add("UNVERIFIED","Ст. 56.1 НК РФ","В модели отсутствуют накопленные показатели инвестиций, НИОКР и налоговой экономии для проверки права на льготу.","tax");
  if(o.priceMode==="inclusive")add("CONDITIONAL","Цены включают НДС","Модель уменьшает базовую выручку на рассчитанный НДС. При разных ставках меняются собственные доходы и прибыль каждой компании.","vat");
@@ -75,9 +77,9 @@ function result(o){
  const cvT=val(o,"costT")*frac(o,"inputT")*.22;
  const cvP=val(o,"costP")*frac(o,"inputP")*.22;
  const deductT=o.vatT==="22", deductP=two?o.vatP==="22":deductT;
- const inputVatT=deductT?cvT:0;
+ const inputVatT=deductT?cvT+(two?0:cvP):0;
  const inputVatP=two&&deductP?cvP+vatInter:0;
- const nonRecT=deductT?0:cvT;
+ const nonRecT=deductT?0:cvT+(two?0:cvP);
  const nonRecP=two?(deductP?0:cvP+vatInter):0;
  const vatT=outVatT-inputVatT,vatP=two?outVatP-inputVatP:0;
  const socialQualRevenue=frac(o,"qual")*(netTech+inter);
@@ -94,7 +96,7 @@ function result(o){
  const interestT=val(o,"loanT")*val(o,"loanRate")/100;
  const interestP=two?val(o,"loanP")*val(o,"loanRate")/100:0;
  const royalties=val(o,"royalty"),foreignServices=val(o,"foreignSvc");
- const costsT=val(o,"costT")+(two?0:val(o,"bank")+val(o,"costP"))+(two?0:0)+nonRecT+(two?0:cvP*(deductT?0:1))+(two?0:0);
+ const costsT=val(o,"costT")+(two?0:val(o,"bank")+val(o,"costP"))+(two?0:0)+nonRecT;
  const costsP=two?val(o,"bank")+val(o,"costP")+val(o,"adminExtra")+nonRecP:0;
  const expT=two?payrollT:payrollT+payrollP;
  const profitT=(two?techSales:totalSales)-costsT-expT-contribT-interestT-royalties-foreignServices;
