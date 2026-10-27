@@ -136,13 +136,55 @@ function render(){
  if($("structure").value==="two"&&$("parent").value==="subsidiary"){$("procOwn").value=$("techOwn").value;$("procUz").value=$("techUz").value}
  let o=gather(),r=result(o);
  $("metrics").innerHTML=metric("GMV клиентских операций",val(o,"gmv"),"млн ₽ · не выручка")+metric("Собственная выручка",r.totalSales,"млн ₽ · без внутреннего оборота")+metric("Налоги в РФ",r.taxRf,"млн ₽ · в т.ч. НДС")+metric("Налоговая нагрузка РФ + Узб.",r.taxAll,"млн ₽ · по допущениям")+metric("Узбекским собственникам",r.receivedUz,"млн ₽ · включая возврат займа",true,r.receivedUz<0);
- drawFlow(o,r);resultsTable(o,r);bars(r);cash(o,r);legal(o,r);comparison(o,r);
+ drawFlow(o,r);resultsTable(o,r);bars(r);cash(o,r);legal(o,r);comparison(o,r);renderLegalGraph(o,r);
  $("procOwn").disabled=o.parent==="subsidiary"&&o.structure==="two";
  $("procUz").disabled=o.parent==="subsidiary"&&o.structure==="two"||o.procOwn==="foreign"||o.structure==="one";
  $("techUz").disabled=o.techOwn==="foreign";
  $("parent").disabled=o.structure==="one";
  $("taxP").disabled=o.structure==="one";$("vatP").disabled=o.structure==="one";
 }
+
+function renderLegalGraph(o,r){
+ const stages=[
+  {name:"A · ООО",field:"structure",values:[["two","Два ООО"],["one","Одно ООО"]]},
+  {name:"B · Контроль",field:"techOwn",values:[["foreign","Узбекистан 100%"],["russian","Россия >50%"]]},
+  {name:"C · ОЭЗ",field:"sez",values:[["yes","Резидент"],["no","Не резидент"]]},
+  {name:"D · Аккредитация",field:"accredited",values:[["no","Без аккредитации"],["yes","Аккредитация"]]},
+  {name:"E · Реестр ПО",field:"registry",values:[["no","Без реестра"],["yes","В реестре"]]},
+  {name:"F · Режим",field:"taxT",values:[["osno","ОСНО"],["usn6","УСН 6%"],["usn15","УСН 15%"]]},
+  {name:"G · Исход",field:null,values:[[r.blocked?"BLOCKED":"CONDITIONAL",r.blocked?"ЗАКРЫТО":"УСЛОВНО ДОПУСТИМО"]]}
+ ];
+ let root=$("decisionMap");root.replaceChildren();
+ let lines=["flowchart LR","classDef selected fill:#eaf9f3,stroke:#118d79,color:#156b59;","classDef blocked fill:#fff1f2,stroke:#b63f4a,color:#a52c40;","classDef idle fill:#f5f8fb,stroke:#d8e3ef,color:#5d738d;"];
+ stages.forEach((stage,si)=>{
+  if(si){const sep=document.createElement("span");sep.className="dag-arrow";sep.textContent="→";root.appendChild(sep)}
+  const box=document.createElement("div");box.className="dag-stage";
+  const h=document.createElement("h4");h.textContent=stage.name;box.appendChild(h);
+  const opts=document.createElement("div");opts.className="dag-options";
+  stage.values.forEach(([v,label],vi)=>{
+   let blocked=(stage.field==="accredited"&&v==="yes"&&o.techOwn==="foreign")||(stage.field==="registry"&&v==="yes"&&o.techOwn==="foreign")||(stage.field===null&&r.blocked);
+   let chosen=stage.field?o[stage.field]===v:true;
+   const button=document.createElement("button");button.type="button";button.textContent=label;button.className="dag-option "+(blocked?"blocked":chosen?"selected":"conditional")+(chosen?" selected":"");
+   if(stage.field)button.onclick=()=>{$(stage.field).value=v;$(stage.field).dispatchEvent(new Event("change",{bubbles:true}))};
+   opts.appendChild(button);
+   const id="G"+si+"_"+vi;lines.push(id+'["'+(stage.name+" · "+label).replace(/"/g,"'")+'"]');
+   lines.push("class "+id+" "+(blocked?"blocked":chosen?"selected":"idle")+";");
+  });
+  box.appendChild(opts);root.appendChild(box);
+ });
+ for(let i=0;i<stages.length-1;i++){
+  const a=stages[i],b=stages[i+1];
+  const ai=a.values.findIndex(v=>a.field?o[a.field]===v[0]:true);
+  const bi=b.values.findIndex(v=>b.field?o[b.field]===v[0]:true);
+  lines.push("G"+i+"_"+Math.max(0,ai)+" ==> G"+(i+1)+"_"+Math.max(0,bi));
+  b.values.forEach((v,j)=>{if(j!==bi)lines.push("G"+i+"_"+Math.max(0,ai)+" -.-> G"+(i+1)+"_"+j)});
+ }
+ $("exportMermaid").onclick=()=>{
+  const blob=new Blob([lines.join("\n")],{type:"text/plain;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="veloxpay-legal-graph.mmd";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ };
+}
+
 IDLIST.forEach(k=>initial[k]=$(k).value);
 IDLIST.forEach(k=>{$(k).addEventListener("input",render);$(k).addEventListener("change",render)});
 $("reset").onclick=()=>{IDLIST.forEach(k=>$(k).value=initial[k]);render()};
