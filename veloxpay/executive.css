@@ -16,3 +16,35 @@ main{max-width:1620px;margin:auto;padding:20px 22px 36px}.page-title{display:fle
 @media(max-width:1280px){.main-layout{grid-template-columns:250px minmax(0,1fr)}.right{grid-column:2}.right .card{margin-top:0}.evidence-list{max-height:290px}}@media(max-width:900px){.main-layout{grid-template-columns:1fr}.left{display:grid;grid-template-columns:1fr 1fr;gap:12px}.left .card{margin:0}.right{grid-column:1}.steps{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){main{padding:12px}.page-title{display:block}.year-label{display:inline-block;margin-top:10px}.left{grid-template-columns:1fr}.financial-head{grid-template-columns:1fr}.financial-head b{font-size:21px}.stack-legend{grid-template-columns:1fr 1fr}.tax-grid{grid-template-columns:1fr 1fr}.steps{grid-template-columns:1fr}.market-participants{grid-template-columns:1fr}.company-metrics b{font-size:12px}.topbar-meta{font-size:9px}}
 
 .mode-line{font-size:11px;font-weight:800;color:#3c668c;background:#ebf2fb;border:1px solid #dbe7f5;border-radius:8px;padding:8px 12px;margin:0 0 12px;text-align:center}
+
+/* Левый блок участников и два независимых маршрута к компаниям */
+.network{display:grid;grid-template-columns:minmax(135px,.78fr) 82px minmax(0,1.48fr);grid-template-rows:auto auto;gap:13px 7px;align-items:center;margin-top:8px}
+.network .market{grid-column:1;grid-row:1 / span 2;align-self:stretch;display:flex;flex-direction:column;justify-content:center;text-align:left;background:#f7faff;border:1px solid #d7e2ef}
+.network .market-participants{display:flex;flex-direction:column;gap:8px;margin-top:13px}
+.network .market-participants span{text-align:left;border-left:3px solid #6689b9;background:#fff;padding:9px;font-weight:700;font-size:11px}
+.network .market-sub{margin-top:13px;font-size:10px;line-height:1.6}
+.network .route{grid-column:2;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:3px;min-width:0}
+.network .route-first{grid-row:1;color:#167c70}
+.network .route-second{grid-row:2;color:#8c9cae}
+.network .route b{font-size:29px;line-height:1}
+.network .route-label{font-weight:800;font-size:9px;line-height:1.25;white-space:normal}
+.network .route small{font-size:8.5px;line-height:1.35}
+.network .active-company{grid-column:3;grid-row:1}
+.network .future-company{grid-column:3;grid-row:2}
+.network .future-company .company-top{align-items:start}
+.network .company-top{flex-wrap:wrap}
+.network .company-top h3{font-size:16px}
+.network .company-metrics{gap:5px}
+.network .company-metrics b{font-size:13px}
+.transition-note{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;background:#eaf2fa;border-radius:8px;padding:10px;margin-top:12px;font-size:11px;color:#476784}
+.transition-note b{color:#246aab;font-size:16px}
+.transition-note small{flex-basis:100%;text-align:center;color:#728ca4}
+.revenue-explain{background:#edf4fb;border-left:3px solid #3f78b6;border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:11px;color:#355d84;font-weight:700}
+.steps{grid-template-columns:repeat(5,minmax(0,1fr))}
+.steps>div{padding:14px 12px;min-width:0}
+.steps b{font-size:11px}
+.steps span{font-size:10px;line-height:1.65}
+@media(max-width:1450px){.steps{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:1280px){.network{grid-template-columns:minmax(160px,.8fr) 88px minmax(0,1.4fr)}}
+@media(max-width:800px){.network{grid-template-columns:minmax(125px,.8fr) 66px minmax(0,1.4fr)}}
+@media(max-width:620px){.network{grid-template-columns:minmax(102px,.7fr) 51px minmax(0,1.5fr);gap:7px 3px}.network .market{padding:9px}.network .market-participants span{font-size:9px;padding:7px 5px}.network .route small{font-size:8px}.network .route b{font-size:22px}.network .company-top h3{font-size:13px}.network .company-body,.network .future-company p{font-size:9px}.network .company-metrics{grid-template-columns:1fr}.network .company-metrics div{padding-top:3px}.steps{grid-template-columns:1fr}}
