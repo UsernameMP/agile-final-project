@@ -1,38 +1,70 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#10223b"><title>VeloxPay — архитектура и доказательная база</title><link rel="stylesheet" href="./executive.css"><script defer src="./executive.js"></script></head><body>
-<header><div><b>VELOXPAY</b><small>ARCHITECTURE LAB / YEAR ONE</small></div><a href="./prototype-v2.html">Развёрнутый рабочий калькулятор ↗</a></header>
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#14263e">
+<title>Разработка структуры бизнеса VeloxPay</title>
+<link rel="stylesheet" href="./executive.css"><script defer src="./executive.js"></script></head>
+<body>
+<header class="topbar"><div class="brand"><span class="brand-mark">V</span><div><b>VeloxPay</b><small>Разработка структуры бизнеса</small></div></div><div class="topbar-meta">Проектирование на первый год · 2027</div></header>
 <main>
-<section class="hero"><div><div class="eyebrow">КАРТА ПРОЕКТА · 27 ОКТЯБРЯ 2026</div><h1>Одна структура бизнеса.<br>Десятки юридических решений.</h1><p>Предварительная модель платёжной и технологической группы в России. Здесь показаны возможные архитектуры, зависимые льготы, денежные потоки и предварительная оценка экономической цены решений.</p></div><div class="statement"><span class="tag amber">НЕ ЮРИДИЧЕСКОЕ ЗАКЛЮЧЕНИЕ</span><strong>Найти норму закона ≠ доказать право VeloxPay применять её.</strong><p>Каждую гипотезу необходимо подтвердить документами, квалификацией операций и финансовыми расчётами.</p></div></section>
-<section class="topline"><div><small>Период проектирования</small><b>2027 · первый год</b></div><div><small>Корпоративная развилка</small><b>1 / 2 российских ООО</b></div><div><small>Узлов проверки</small><b id="all-count">—</b></div><div><small>Подтверждено применительно к VeloxPay</small><b>Пока нет</b></div></section>
-<div class="layout">
-<div class="left">
-<section class="panel"><h2>01 · Архитектура</h2><div class="field"><label for="structure">Число ООО</label><select id="structure"><option value="two">Два: Technology + Processing</option><option value="one">Одно: совмещённая деятельность</option></select></div><div class="field"><label for="control">Реальный контроль</label><select id="control"><option value="foreign">Узбекский — 100%</option><option value="russian">Российский — более 50%</option></select></div><div class="field"><label for="sez">Technology — резидент ОЭЗ</label><select id="sez"><option value="yes">Предполагается</option><option value="no">Без ОЭЗ</option></select></div><div class="hint">В демонстрационном расчёте оба направления применяют ОСНО. Изменение контроля не создаёт право на льготы автоматически.</div></section>
-<section class="panel"><h2>02 · Денежные параметры <span class="tag grey">млн ₽ / год</span></h2>
-<div class="pair"><label for="gmv">Платёжный оборот, GMV</label><input id="gmv" type="number" min="0" value="14000"></div>
-<div class="pair"><label for="proc">Доход от процессинга (не GMV)</label><input id="proc" type="number" min="0" value="135"></div><p class="micro" id="take-rate">Эффективная комиссия: 0,96% GMV</p>
-<div class="pair"><label for="tech">Внешние технологические доходы</label><input id="tech" type="number" min="0" value="70"></div>
-<div class="pair"><label for="procCost">Расходы Processing, без ФОТ</label><input id="procCost" type="number" min="0" value="55"></div>
-<div class="pair"><label for="techCost">Расходы Technology, без ФОТ</label><input id="techCost" type="number" min="0" value="25"></div>
-<div class="pair"><label for="procPay">ФОТ Processing</label><input id="procPay" type="number" min="0" value="20"></div>
-<div class="pair"><label for="techPay">ФОТ Technology</label><input id="techPay" type="number" min="0" value="26"></div>
-<div class="rule"></div><div class="pair"><label for="inter">Технологические услуги между ООО *</label><input id="inter" type="number" min="0" value="18"></div>
-<div class="pair"><label for="capital">Вложения / капитал первого года</label><input id="capital" type="number" min="0" value="100"></div>
-<div class="pair"><label for="payout">Доля распределяемой прибыли, %</label><input id="payout" type="number" min="0" max="100" value="75"></div>
-<p class="micro">* Услуги должны реально оказываться и иметь экономически обоснованную цену. Все суммы без НДС. Допущения, а не данные отчётности Brio Group.</p>
-<button type="button" id="reset" class="outline">Вернуть исходные допущения</button></section>
+<div class="page-title"><div><div class="eyebrow">Корпоративная и финансовая модель</div><h1>Разработка структуры бизнеса VeloxPay</h1><p>Первый год — запуск через VeloxPay Technology. Второй год — возможное выделение процессинговых операций в отдельное ООО. Параметры изменяются, а финансовые и правовые последствия пересчитываются.</p></div><span class="year-label">Первый год · 2027</span></div>
+<div class="main-layout">
+<aside class="left">
+<section class="card"><h2><span class="num">01</span> Архитектура</h2>
+<div class="field"><label for="structure">Структура после первого года</label><select id="structure"><option value="two">Technology + Processing</option><option value="one">Одно ООО — без выделения</option></select></div>
+<div class="field"><label for="control">Контроль российской компании</label><select id="control"><option value="foreign">100% — собственник из Узбекистана</option><option value="russian">Более 50% — реальный российский контроль</option></select></div>
+<div class="field"><label for="sez">Резидентство Technology в ОЭЗ</label><select id="sez"><option value="yes">Рассматривается</option><option value="no">Не предполагается</option></select></div>
+<div class="rule"></div>
+<div class="field"><label>VeloxPay Technology · первый год · налог</label><div class="choices" data-for="taxT"><button type="button" data-val="osno">ОСНО</button><button type="button" data-val="usn6">УСН 6%</button><button type="button" data-val="usn15">УСН 15%</button></div><input id="taxT" type="hidden" value="osno"></div>
+<div class="field"><label>VeloxPay Technology · НДС</label><div class="choices" data-for="vatT"><button type="button" data-val="22">22%</button><button type="button" data-val="5">5%</button><button type="button" data-val="7">7%</button><button type="button" data-val="exempt">Без НДС*</button></div><input id="vatT" type="hidden" value="22"></div>
+<div id="processingControls"><div class="rule"></div><div class="field"><label>VeloxPay Processing · второй год · налог</label><div class="choices" data-for="taxP"><button type="button" data-val="osno">ОСНО</button><button type="button" data-val="usn6">УСН 6%</button><button type="button" data-val="usn15">УСН 15%</button></div><input id="taxP" type="hidden" value="osno"></div>
+<div class="field"><label>VeloxPay Processing · НДС</label><div class="choices" data-for="vatP"><button type="button" data-val="22">22%</button><button type="button" data-val="5">5%</button><button type="button" data-val="7">7%</button><button type="button" data-val="exempt">Без НДС*</button></div><input id="vatP" type="hidden" value="22"></div>
+<p class="micro">Режим Processing показан для проектирования второго года и не изменяет налоговую базу первого года.</p></div>
+<p class="micro">* Освобождение от НДС при УСН зависит от доходов и других условий. В 2027 году порог — 20 млн ₽.</p>
+</section>
+<section class="card"><h2><span class="num">02</span> Денежные параметры</h2><div class="unit">млн ₽ за первый год, если не указано иное</div>
+<div class="param"><label for="gmv">Платежи клиентов (GMV)</label><input id="gmv" type="number" value="14000" min="0" step="100"></div>
+<div class="param"><label for="proc">Собственный доход от процессинга</label><input id="proc" type="number" value="135" min="0" step="1"></div>
+<div class="param"><label for="tech">Разработка и другие ИТ-доходы</label><input id="tech" type="number" value="70" min="0" step="1"></div>
+<div class="param"><label for="procCost">Расходы на процессинг</label><input id="procCost" type="number" value="55" min="0" step="1"></div>
+<div class="param"><label for="techCost">Расходы на разработку</label><input id="techCost" type="number" value="25" min="0" step="1"></div>
+<div class="param"><label for="procPay">ФОТ процессингового направления</label><input id="procPay" type="number" value="20" min="0" step="1"></div>
+<div class="param"><label for="techPay">ФОТ разработчиков</label><input id="techPay" type="number" value="26" min="0" step="1"></div>
+<div class="param"><label for="capital">Первоначальное финансирование</label><input id="capital" type="number" value="100" min="0" step="1"></div>
+<div class="param"><label for="payout">Распределение чистой прибыли, %</label><input id="payout" type="number" value="75" min="0" max="100" step="5"></div>
+<button class="reset" id="reset" type="button">Восстановить исходные значения</button>
+<div class="micro top-margin">Доход — не весь платёжный оборот. Финансирование не признаётся операционной выручкой. Числа можно менять; исходно использованы иллюстративные значения.</div>
+</section></aside>
+<div class="center">
+<section class="card structure-card"><div class="section-heading"><h2><span class="num">03</span> Структура денежных потоков</h2><span class="pill neutral">Первый и второй годы</span></div>
+<div class="diagram">
+<div class="investor block"><div class="overline">Собственник / инвестор из Узбекистана</div><strong>Вложение капитала и получение дивидендов</strong></div>
+<div class="dual-arrows"><div class="arrow-col"><span>Первоначальное финансирование</span><b id="financingAmount">100 млн ₽</b><i>↓</i></div><div class="arrow-col reverse"><span>Дивиденды после удержаний</span><b id="ownerAmount">—</b><i>↑</i></div></div>
+<div class="block market">
+<div class="overline">Взаимодействие в первый год</div><div class="market-participants"><span>Физические лица</span><span>Мерчанты</span><span>Банки-партнёры</span></div>
+<div class="market-sub">Деньги клиентов переводит банк; в выручке VeloxPay учитывается только собственное вознаграждение</div></div>
+<div class="middle-arrow"><b>↓</b><span>Техническое обслуживание, взаимодействие с банками и комиссии</span></div>
+<div class="block company active-company">
+<div class="company-top"><div><div class="overline">Первый год · 2027</div><h3>VeloxPay Technology</h3></div><span id="techMode" class="pill neutral">ОСНО · НДС 22%</span></div>
+<div class="company-body">Разработка и сопровождение ПО · пилотное взаимодействие с физлицами, мерчантами и банками</div>
+<div class="company-metrics"><div><small>Выручка</small><b id="revenueTech">—</b></div><div><small>Налог и взносы</small><b id="taxTech">—</b></div><div><small>Чистая прибыль</small><b id="netTech">—</b></div></div>
+<div id="sezWarning" class="legal-inline"></div>
 </div>
-<div class="middle">
-<section class="panel"><h2>03 · Предполагаемая схема группы <span id="model-label" class="tag grey">Два ООО</span></h2><div class="diagram"><div class="invest"><small>ИНВЕСТОР / УЗБЕКИСТАН</small><b>Brio Group / собственники</b><span>Капитал · займы · права на ПО</span></div><div class="down">↓ финансирование <b id="invest">100 млн ₽</b></div>
-<div class="companies" id="companies">
-<div class="node" id="technology"><small>TECHNOLOGY · ОЭЗ — ГИПОТЕЗА</small><b id="tech-title">VeloxPay Technology</b><p>Разработка ПО · лицензирование · сопровождение</p><div class="nmetrics"><div><span>Выручка</span><strong id="revT">—</strong></div><div><span>Прибыль</span><strong id="profitT">—</strong></div><div><span>Налоги и взносы</span><strong id="taxT">—</strong></div></div></div>
-<div class="bridge" id="bridge"><span>⇄</span><b>Договорные услуги</b><small>Нельзя просто переносить прибыль</small><strong id="amountInter">—</strong></div>
-<div class="node processing" id="processing"><small>PROCESSING · БАНК-ПАРТНЁР</small><b>VeloxPay Processing</b><p>Комиссии · технический процессинг · мерчанты</p><div class="nmetrics"><div><span>Выручка</span><strong id="revP">—</strong></div><div><span>Прибыль</span><strong id="profitP">—</strong></div><div><span>Налоги и взносы</span><strong id="taxP">—</strong></div></div></div></div>
-<div class="sources"><div><b>Заказчики разработки ПО</b><small>Внешняя выручка Technology</small><strong id="externalT">—</strong></div><div><b>Платежи клиентов / банки</b><small>GMV отдельно от комиссионных доходов</small><strong id="externalP">—</strong></div></div><div class="rails"><span>Налог на прибыль / УСН</span><span>НДС</span><span>Страховые взносы</span><span>Дивиденды и налог у источника</span></div></div><p class="micro">Процессинговые функции, платежи иностранных инвесторов и распределение прибыли требуют самостоятельного правового анализа.</p></section>
-<section class="panel"><h2>04 · Цена выбора архитектуры <span class="tag amber">СЦЕНАРИЙ, НЕ ПРОГНОЗ</span></h2><div class="two-up"><div class="figure"><small>БАЗА · без льгот Technology</small><b id="base">—</b><small>Модельная чистая выплата узбекскому собственнику за первый год</small></div><div class="figure optim"><small>ГИПОТЕЗА · профильные льготы</small><b id="optim">—</b><small>Только если отдельное ООО и право на льготы подтверждено</small></div></div><div class="delta"><div><span>Потенциальный эффект, при данных допущениях</span><b id="delta">—</b></div><span id="result-status" class="tag amber">ТРЕБУЕТ ПОДТВЕРЖДЕНИЯ</span></div><div class="taxgrid"><div><span>Налог на прибыль</span><b id="profit-tax">—</b></div><div><span>НДС к уплате*</span><b id="vat-tax">—</b></div><div><span>Страховые взносы</span><b id="social-tax">—</b></div><div><span>Налог с дивидендов</span><b id="div-tax">—</b></div></div>
-<p class="micro" id="owner-assumption">При иностранном контроле расчёт условно исходит из 100% узбекского участия; при российском контроле — из 49% узбекского участия. Это допущения для сравнения.</p><p class="warning"><b>Не экономическое обещание.</b> Условные ставки, упрощённый входной НДС и иллюстративный ФОТ. Не учтены отдельные узбекские налоги, ограничения вывода средств, лицензирование банковских операций, перенос убытков и календарь выплат. Если хотя бы одно ключевое условие не доказано, экономия может отсутствовать.</p></section>
+<div class="transfer-arrow" id="transferArrow"><strong>↓</strong><span>Второй год · перенос процессинговых функций после проверки договоров и разрешений</span></div>
+<div class="block future-company" id="futureCompany"><div class="company-top"><div><div class="overline">Второй год · 2028 · планируемая организация</div><h3>VeloxPay Processing</h3></div><span id="procMode" class="pill neutral">ОСНО · НДС 22%</span></div><div class="company-body">Прямое взаимодействие с физлицами, мерчантами и банками; самостоятельный учёт комиссий, расходов и налогов.</div><p>Денежный поток второго года появится после утверждения перехода и отдельного финансового плана.</p></div>
+</div></section>
+<section class="card waterfall-card"><div class="section-heading"><h2><span class="num">04</span> Экономика первого года</h2><span class="pill neutral">В процентах от выручки</span></div>
+<div class="financial-head"><div><span>Операционная выручка группы</span><b id="externalRevenue">—</b><small>Не включает капитал <span id="excludedCapital">100 млн ₽</span> и GMV</small></div><div><span>Чистая выплата собственнику</span><b id="ownerPercent">—</b><small>Доля от операционной выручки</small></div><div><span>Остаётся для реинвестирования</span><b id="retainedPercent">—</b><small>Доля от операционной выручки</small></div></div>
+<div class="stack" id="stack" aria-label="Структура распределения операционной выручки"></div><div class="stack-legend" id="stackLegend"></div>
+<div class="tax-grid"><div><span>Налог на прибыль / УСН</span><strong id="profitTax">—</strong></div><div><span>Страховые взносы</span><strong id="socialTax">—</strong></div><div><span>НДС к уплате*</span><strong id="vatTax">—</strong></div><div><span>Налог с дивидендов</span><strong id="divTax">—</strong></div></div>
+<div id="statusMessage" class="status-message"></div>
+<div class="micro top-margin">* НДС показан отдельно: предполагается, что договорные цены указаны без НДС, а соответствующий налог взимается сверх цены. Входной НДС рассчитывается по укрупнённым допущениям. Удержание с дивидендов — сценарные 15%, без автоматического применения СИДН. Страховые взносы — укрупнённая оценка; годовой размер предельной базы не моделируется.</div>
+</section>
 </div>
-<div class="right">
-<section class="panel"><h2>05 · Карта доказательств</h2><div class="counts"><div><b id="n-known">—</b><small>проверенных норм</small></div><div><b id="n-open">—</b><small>вопросов к Brio</small></div><div><b id="n-blocked">—</b><small>жёстких ограничений</small></div></div><p class="micro">Проверенная норма ≠ подтверждённая применимость к бизнесу.</p><div class="evidence" id="evidence"></div><div class="detail" id="detail"><b>Выберите узел</b><p>Здесь появятся нормативное основание, неизвестные обстоятельства и необходимые доказательства.</p></div></section>
-<section class="panel"><h2>06 · Следующий этап работы</h2><div class="checklist"><div><span>01</span><p><b>Юридическая квалификация</b><small>Платёжные операции, договоры, ПО и владельцы прав</small></p></div><div><span>02</span><p><b>Доказательная база</b><small>Норма → факт → документ → заключение → риск</small></p></div><div><span>03</span><p><b>Финансовый инжиниринг</b><small>НДС каждого потока, P&amp;L, cash flow, налоги двух стран</small></p></div><div><span>04</span><p><b>Поиск границ эффективности</b><small>Чувствительность, допустимые сценарии, регуляторные риски</small></p></div></div><div class="closing">Цель — превратить наглядную карту гипотез в <b>проверенную юридическую и финансовую архитектуру</b>.</div></section>
-</div></div>
-<footer><span>VeloxPay · демонстрационная исследовательская карта; не правовое или налоговое заключение.</span><a href="./prototype-v2.html">Предыдущая детальная версия ↗</a></footer>
+<aside class="right"><section class="card"><div class="section-heading"><h2><span class="num">05</span> Карта доказательств</h2></div>
+<div class="evidence-stats"><div><strong id="knownCount">—</strong><span>правовых норм</span></div><div><strong id="openCount">—</strong><span>вопросов</span></div><div><strong id="blockedCount">—</strong><span>ограничений</span></div></div>
+<div class="micro">Цвет означает состояние правовой проверки. Выберите вопрос, чтобы увидеть норму и необходимые документы.</div>
+<div id="evidenceList" class="evidence-list"></div>
+<div id="evidenceDetail" class="evidence-detail"><b>Выберите вопрос для проверки</b></div>
+</section></aside></div>
+<section class="bottom"><div class="bottom-heading"><span class="num">06</span><div><h2>Следующие этапы работы</h2><p>Преобразование выбранной конструкции в проверенную финансово-правовую модель</p></div></div><div class="steps"><div><b>01 · Юридическая квалификация</b><span>Правовая роль в платежах, договоры, собственность, права на ПО и ограничения льгот.</span></div><div><b>02 · Доказательная база</b><span>Норма → фактические обстоятельства → документ → заключение → риск.</span></div><div><b>03 · Финансовый инжиниринг</b><span>НДС по потокам, налог на прибыль, взносы, трансграничные платежи и денежный поток.</span></div><div><b>04 · Граница эффективности</b><span>Перебор допустимых конструкций, чувствительность к выручке, ФОТ и реинвестированию.</span></div></div></section>
+<footer>VeloxPay · Предварительная разработка структуры бизнеса на 2027 год. Юридические условия подлежат документальному подтверждению.</footer>
 </main></body></html>
