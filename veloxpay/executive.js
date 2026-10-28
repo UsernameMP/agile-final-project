@@ -36,31 +36,43 @@ function evidence(o){
  for(let j=3;j<=5;j++){let p=document.createElement("p");let strong=document.createElement("strong");strong.textContent=["Норма: ","Неизвестно: ","Доказательства: "][j-3];p.append(strong,document.createTextNode(q[j]));detail.appendChild(p)}
  let a=document.createElement("a");a.href=source[q[6]];a.target="_blank";a.rel="noopener noreferrer";a.textContent="Нормативный источник";detail.appendChild(a);
 }
+
+const VAT_FREE_2027=20, VAT_FIVE_2027=250*1.153, VAT_USN_MAX_2027=450*1.153;
+// Коэффициент 1.153 опубликован как проект, не утвержденный норматив.
+function vatFor(reg,selected,revenue){
+ if(reg==="osno")return {rate:"22",label:"НДС 22% с вычетами — ОСНО",status:"normal"};
+ if(revenue<=VAT_FREE_2027)return {rate:"exempt",label:"До 20 млн ₽: освобождение от НДС при УСН при соблюдении условий предшествующего года",status:"conditional"};
+ if(selected==="22")return {rate:"22",label:"НДС 22% с вычетами выбран вместо специальной ставки УСН",status:"conditional"};
+ if(revenue<=VAT_FIVE_2027)return {rate:"5",label:"НДС 5% без вычетов: до ≈288,25 млн ₽ (порог по проекту дефлятора 2027)",status:"project"};
+ if(revenue<=VAT_USN_MAX_2027)return {rate:"7",label:"НДС 7% без вычетов: до ≈518,85 млн ₽ (порог по проекту дефлятора 2027)",status:"project"};
+ return {rate:"22",label:"Порог УСН ≈518,85 млн ₽ (проект) превышен; режим УСН недоступен, необходима проверка перехода на ОСНО",status:"blocked"};
+}
 function allowed(){
  const revenue=N("proc")+N("tech");
  if($("taxT").value==="osno")$("vatT").value="22";
- if($("taxT").value!=="osno"&&$("vatT").value==="exempt"&&revenue>20)$("vatT").value="22";
- if($("taxT").value!=="osno"&&$("vatT").value==="7"&&revenue<=250)$("vatT").value="5";
+ if($("taxT").value!=="osno"&&revenue<=VAT_FREE_2027)$("vatT").value="auto";
  if($("taxP").value==="osno")$("vatP").value="22";
  $("processingControls").hidden=$("structure").value==="one";
  document.querySelectorAll(".choices").forEach(group=>{
-  let field=group.dataset.for,current=$(field).value;
-  let vat=field.startsWith("vat"),reg=field==="vatT"?$("taxT").value:$("taxP").value;
-  for(const b of group.querySelectorAll("button")){b.setAttribute("aria-pressed",String(current===b.dataset.val));
-   b.disabled=vat&&((reg==="osno"&&b.dataset.val!=="22")||(field==="vatT"&&revenue>20&&b.dataset.val==="exempt")||(field==="vatT"&&revenue<=250&&b.dataset.val==="7"));
-  }
+  let field=group.dataset.for,selected=$(field).value,vat=field.startsWith("vat");
+  const taxReg=field==="vatT"?$("taxT").value:$("taxP").value;
+  group.querySelectorAll("button").forEach(btn=>{
+   btn.setAttribute("aria-pressed",String(btn.dataset.val===selected));
+   btn.disabled=vat&&taxReg==="osno"&&btn.dataset.val==="auto";
+  });
  });
 }
 function calculate(){
  const rev=N("proc")+N("tech"),operating=N("procCost")+N("techCost"),payroll=N("procPay")+N("techPay");
- const insurance=payroll*.30,rate=$("vatT").value,reg=$("taxT").value;
- const inputVat=.22*(N("procCost")*.35+N("techCost")*.45),recovered=rate==="22"?inputVat:0,unrecovered=rate==="22"?0:inputVat;
+ const insurance=payroll*.30,taxReg=$("taxT").value,vatRule=vatFor(taxReg,$("vatT").value,rev),rate=vatRule.rate;
+ const inputVat=.22*(N("procCost")*.35+N("techCost")*.45);
+ const recovered=rate==="22"?inputVat:0,unrecovered=rate==="22"?0:inputVat;
  const before=rev-operating-payroll-insurance-unrecovered;
- const profitTax=reg==="osno"?Math.max(0,before)*.25:reg==="usn6"?Math.max(rev*.03,rev*.06-Math.min(rev*.03,insurance)):Math.max(rev*.01,Math.max(0,before)*.15);
- const vat=rate==="exempt"?0:rev*Number(rate)/100-recovered,net=before-profitTax;
- const payout=Math.max(0,net)*Math.min(100,N("payout"))/100,uzPart=$("control").value==="foreign"?1:.49;
+ const profitTax=taxReg==="osno"?Math.max(0,before)*.25:taxReg==="usn6"?Math.max(rev*.03,rev*.06-Math.min(rev*.03,insurance)):Math.max(rev*.01,Math.max(0,before)*.15);
+ const vat=rate==="exempt"?0:rev*Number(rate)/100-recovered;
+ const net=before-profitTax, payout=Math.max(0,net)*Math.min(100,N("payout"))/100,uzPart=$("control").value==="foreign"?1:.49;
  const dividendTax=payout*uzPart*.15,owner=payout*uzPart-dividendTax,other=payout*(1-uzPart),retained=net-payout;
- return {rev,operating,payroll,insurance,inputVat,unrecovered,before,profitTax,vat,net,owner,retained,dividendTax,other,payout};
+ return {rev,operating,payroll,insurance,inputVat,unrecovered,before,profitTax,vat,net,owner,retained,dividendTax,other,payout,vatRule};
 }
 function render(){
  allowed();const r=calculate(),two=$("structure").value==="two",sez=$("sez").value==="yes",otherShare=N("proc")/Math.max(.00001,r.rev);
