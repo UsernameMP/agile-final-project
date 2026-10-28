@@ -1,132 +1,95 @@
-
 "use strict";
-const source={
-acc:"https://www.consultant.ru/document/cons_doc_LAW_427955/42c42ffc697636ca1815956dc3ef70fd63c4defc/",
-registry:"https://www.consultant.ru/document/cons_doc_LAW_61798/",
-sez:"https://www.consultant.ru/document/cons_doc_LAW_54599/c2659f37bc1799afc11854330bb5b7969e54df2f/",
-social:"https://www.consultant.ru/document/cons_doc_LAW_28165/c5c16c86f95c5db63601047b1c0a5942bd77c824/",
-usn:"https://www.consultant.ru/document/cons_doc_LAW_28165/a1d86f7078e645869b02fde85e8c972193557dee/",
-vat:"https://www.nalog.gov.ru/rn77/taxation/taxes/nds/16601302/",
-bank:"https://www.consultant.ru/document/cons_doc_LAW_115625/",
-tax:"https://www.consultant.ru/document/cons_doc_LAW_28165/",
-corporate:"https://www.consultant.ru/document/cons_doc_LAW_17819/"
-};
-const questions=[
-{id:"bank",name:"Правовая роль Processing и банк-партнёр",type:"open",rule:"161-ФЗ: право осуществлять переводы денежных средств и функции платёжного агрегатора зависит от регулируемой роли.",proof:"Договоры с банками, схема маршрута платежа, распределение функций, обязанности по идентификации и хранению данных.",why:"Может изменить всю структуру выручки и обязанности по лицензированию.",src:"bank"},
-{id:"vat",name:"НДС на процессинговые комиссии с 2026 года",type:"known",rule:"Освобождение для определённых услуг карточного процессинга и информационно-технологического взаимодействия отменено с 01.01.2026.",proof:"Карта продуктов OSON, предмет каждого договора, получатель комиссии и характер услуги.",why:"Прямое воздействие на маржу и цену договоров.",src:"vat"},
-{id:"sez",name:"Профильная деятельность резидента ОЭЗ",type:"known",rule:"116-ФЗ, ст. 10: доход от иной деятельности не более 10% общего объёма доходов резидента, с дополнительными условиями.",proof:"Соглашение об осуществлении ТВД, план работ, расходы на разработку, классификация доходов, учёт.",why:"Определяет допустимость совмещения функций в одном ООО.",src:"sez"},
-{id:"acc",name:"ИТ-аккредитация и иностранный контроль",type:"dynamic",rule:"ПП № 1729, п. 4 подп. «ж»: обычная процедура требует российского контроля более 50% для непубличной организации; отдельно существуют исключения.",proof:"ЕГРЮЛ, цепочка участников, контроль голосов, права управления, документы об исключении.",why:"Аккредитация сама по себе не равна праву на каждую льготу.",src:"acc"},
-{id:"registry",name:"Реестр российского ПО",type:"dynamic",rule:"149-ФЗ, ст. 12.1: предусмотрены контроль российского коммерческого правообладателя, требования к исключительным правам и иностранным платежам.",proof:"Правообладатель ПО, исходный код, цепочка прав, иностранные платежи, описание финансовых функций.",why:"Возможность отдельных НДС-преференций, но не всей структуры.",src:"registry"},
-{id:"social",name:"Пониженные взносы: 70% ИТ-доходов",type:"known",rule:"НК РФ, п. 5 ст. 427: подтверждённое резидентство ТВД ОЭЗ может использоваться как альтернатива ИТ-аккредитации при выполнении иных условий.",proof:"Подтверждение статуса ОЭЗ; раздельный реестр ИТ-доходов; состав проектов и ФОТ.",why:"Существенная чувствительность к численности команды.",src:"social"},
-{id:"usn",name:"УСН и корпоративное участие более 25%",type:"known",rule:"НК РФ, подп.14 п.3 ст.346.12: корпоративное участие более 25% обычно закрывает УСН для дочерней компании.",proof:"Корпоративный план и таблица долей Processing и Technology.",why:"Исключает ряд налоговых комбинаций.",src:"usn"},
-{id:"services",name:"Реальность услуг между двумя ООО",type:"open",rule:"Ст.252 и 54.1 НК РФ требуют экономической обоснованности затрат и недопустимости искажения операций.",proof:"Технические задания, штат, трудозатраты, акты, права на код, методика цены, договор.",why:"Платёж нельзя произвольно устанавливать ради переноса прибыли.",src:"tax"},
-{id:"licence",name:"Лицензионный доход и НДС",type:"open",rule:"НК РФ, ст.149: для отдельных лицензий на российское ПО предусмотрены условия и исключения, включая отдельные финансовые функции.",proof:"Предмет лицензии, реестр ПО, функции продукта, договоры, фактический правообладатель.",why:"Может быть критичен для структуры Technology.",src:"tax"},
-{id:"invest",name:"Финансирование из Узбекистана",type:"open",rule:"Вклад в УК, заём и оплата реальных услуг имеют разные юридические и валютные основания.",proof:"Иностранный отправитель, корпоративные документы, банковское подтверждение маршрута, валютные разрешения.",why:"Можно иметь прибыльную модель, но не провести инвестицию.",src:"corporate"},
-{id:"dividends",name:"Дивиденды, займы и возврат денег",type:"open",rule:"Для дивидендов и процентов действуют разные правила налога у источника, соглашения об избежании двойного налогообложения и фактического права на доход.",proof:"Цепочка собственников, налоговое резидентство, подтверждение фактического получателя, график займов.",why:"Влияет на фактическую сумму денег у бенефициара.",src:"tax"},
-{id:"pricing",name:"НДС и цена договора с мерчантом",type:"open",rule:"Комиссия, включающая НДС, и комиссия без НДС дают разную экономику при неизменных продажах.",proof:"Тарифы, договоры и коммерческие условия с банками/мерчантами.",why:"Иногда эффект НДС выше эффекта ставки налога на прибыль.",src:"vat"},
-{id:"terms",name:"Инвестиционные и операционные обязательства ОЭЗ",type:"open",rule:"Статус резидента не переносится автоматически на другие компании; нужны соглашение, проект и соблюдение обязательств.",proof:"Бизнес-план, соглашение, смета инвестиций, адрес, профиль команды.",why:"Влияет на стоимость и сроки проекта.",src:"sez"},
-{id:"sens",name:"Математическая оптимизация и чувствительность",type:"open",rule:"Результат модели зависит от реальных расходов, функций, рисков, численности, цены услуг, НДС и доступности льгот.",proof:"Прогноз продаж, маржинальность продуктов, банк-комиссии, расходы по штатам, ставки и соглашения.",why:"В финальной версии — поиск границ эффективности, а не фиксированная схема.",src:"tax"}
+const $=id=>document.getElementById(id);
+const ids="structure control sez taxT vatT taxP vatP gmv proc tech procCost techCost procPay techPay capital payout".split(" ");
+const original={};ids.forEach(x=>original[x]=$(x).value);
+const N=id=>Math.max(0,Number($(id).value)||0);
+const fmt=x=>(Number(x)||0).toLocaleString("ru-RU",{minimumFractionDigits:1,maximumFractionDigits:1});
+const m=x=>fmt(x)+" млн ₽",pc=x=>fmt(x*100)+"%";
+const source={sez:"https://www.consultant.ru/document/cons_doc_LAW_54599/c2659f37bc1799afc11854330bb5b7969e54df2f/",tax:"https://www.consultant.ru/document/cons_doc_LAW_28165/",vat:"https://www.nalog.gov.ru/new2026/",usn:"https://www.nalog.gov.ru/rn46/news/activities_fts/16636927/",acc:"https://www.consultant.ru/document/cons_doc_LAW_427955/",registry:"https://www.consultant.ru/document/cons_doc_LAW_61798/",bank:"https://www.consultant.ru/document/cons_doc_LAW_115625/",company:"https://www.consultant.ru/document/cons_doc_LAW_17819/"};
+const checks=[
+["bank","Платёжная роль Technology в первый год","open","Закон № 161-ФЗ различает функции банка, платёжного агрегатора и технологического исполнителя.","Кто принимает деньги клиентов и на каком основании Technology получает комиссию?","Схема платежа, договор с банком, договор с мерчантом.","bank"],
+["sez","ОЭЗ: профильная и иная деятельность","sez","Часть 5 статьи 10 № 116-ФЗ: доходы от разрешённой иной деятельности — не более 10% общего дохода и эта деятельность предусмотрена соглашением.","Будет ли процессинговый доход квалифицирован как иная деятельность?","Проект соглашения, бизнес-план, классификация договоров и доходов.","sez"],
+["vat","НДС на процессинг с 2026 года","known","В 2026 году введено обложение НДС ряда процессинговых и информационно-технологических платёжных услуг по общим правилам.","Какие из комиссий действительно относятся к этим услугам, а какие к банковским операциям?","Договоры, тарифы, предмет услуг, платёжные схемы.","vat"],
+["usn","УСН, НДС 5%, 7% и освобождение","known","Статьи 145, 164, 346.12–346.13 НК РФ; по закону № 228-ФЗ лимит освобождения от НДС в 2027 году — 20 млн ₽.","Доходы предшествующего года, пороги для 5%/7%, корпоративное участие.","Бухгалтерские показатели, ЕГРЮЛ, финансовый прогноз.","usn"],
+["accreditation","ИТ-аккредитация","control","Подп. «ж» п. 4 ПП РФ № 1729 требует российский контроль более 50% в общем порядке, кроме установленного исключения по решению Правительства.","Возможна ли подлинная структура российского контроля?","Устав, доли, голоса, цепочка контроля.","acc"],
+["registry","Реестр российского ПО","control","Статья 12.1 № 149-ФЗ предъявляет самостоятельные требования к контролю российского правообладателя и правам на ПО.","Кто владеет исключительными правами, есть ли выплаты зарубежному правообладателю?","Документы на ПО, договоры, технический профиль продукта.","registry"],
+["insurance","Пониженные страховые взносы","open","Статья 427 НК РФ предусматривает льготные тарифы для отдельных ИТ-плательщиков и резидентов технико-внедренческой ОЭЗ.","Достигается ли 70% квалифицируемых доходов и выполнены ли остальные условия?","Расшифровка доходов, ФОТ, документы резидента.","tax"],
+["daughter","Создание дочернего Processing","known","Пункт 2 статьи 7 № 14-ФЗ допускает учреждение ООО другим обществом с единственным участником.","Будет ли дочерняя организация или прямое владение и как это ограничивает УСН?","Схема участников, решение об учреждении, проверка ст. 346.12 НК РФ.","company"],
+["licence","Лицензия на ПО против услуг","open","Подп. 26 п. 2 ст. 149 НК РФ предусматривает условия и исключения для лицензий российского ПО.","Есть ли реальная самостоятельная лицензия и не исключена ли финансовая функциональность?","Состав ПО, лицензия, реестр, описание функций.","tax"],
+["funding","Капитал и займы из Узбекистана","open","Капитал, заём и платежи за услуги регулируются разными корпоративными, налоговыми и валютными правилами.","Каким банком и по какому основанию реально можно провести средства?","Инвестор, банк, договоры, документы валютного контроля.","company"],
+["dividends","Дивиденды и обратные переводы","open","НК РФ и соглашение об избежании двойного налогообложения устанавливают условия налога у источника и подтверждения права на доход.","Кто фактический получатель и какие ставки действительно доступны?","Сертификат резидентства, права собственников, корпоративные решения.","tax"],
+["skolkovo","Сколково и совместимость режимов","open","Статус участника «Сколково» предоставляется при самостоятельном выполнении установленных требований.","Может ли проект соответствовать критериям и как соотносятся режимы с ОЭЗ?","Продуктовый паспорт, НИОКР, состав проекта, сравнительный правовой анализ.","tax"]
 ];
-const ids=["structure","control","sez","gmv","proc","tech","procCost","techCost","procPay","techPay","inter","capital","payout"];
-const el=id=>document.getElementById(id);
-const initial={};ids.forEach(id=>initial[id]=el(id).value);
-const v=id=>Math.max(0,Number(el(id).value)||0);
-const m=n=>Number(n||0).toLocaleString("ru-RU",{minimumFractionDigits:1,maximumFractionDigits:1})+" млн ₽";
-function compute(){
- const two=el("structure").value==="two";
- const sez=el("sez").value==="yes";
- const control=el("control").value;
- const P=v("proc"),T=v("tech"),Fp=v("procPay"),Ft=v("techPay"),Cp=v("procCost"),Ct=v("techCost"),I=two?v("inter"):0;
- const profile=T/(P+T||1),other=1-profile;
- // The effect case is conditional: two entities + separate Technology + assumed real T/VD + hypothetical lower rates.
- const eligible=two&&sez;
- function scenario(relief){
-   let socT=Ft*(relief?.15:.30),socP=Fp*.30;
-   let pbtT=T+I-Ct-Ft-socT,pbtP=two?P-Cp-Fp-socP-I:0;
-   if(!two){pbtT=P+T-Cp-Ct-Fp-Ft-socP-socT}
-   let taxT=Math.max(0,pbtT)*(relief?.02:.25),taxP=Math.max(0,pbtP)*.25;
-   let net=pbtT+pbtP-taxT-taxP;
-   let directShare=control==="foreign"?1:.49;
-   let dividends=Math.max(0,net)*v("payout")/100;
-   let dividendWht=dividends*directShare*.15; // scenario assumption: no DTT benefit.
-   let toOwner=dividends*directShare-dividendWht;
-   // VAT 22% on taxable service revenue; simplified input VAT: proc costs 35%, tech costs 45%, no exempt service assumed.
-   let vat=Math.max(0,.22*(P+T-.35*Cp-.45*Ct));
-   return {socT,socP,pbtT,pbtP,taxT,taxP,vat,net,toOwner,dividendWht,dividends,taxes:taxT+taxP+vat+socT+socP+dividendWht};
- }
- return {two,sez,control,eligible,profile,other,base:scenario(false),opt:scenario(eligible)};
+let selected="bank";
+function status(q,o){if(q[2]==="known")return"known";if(q[2]==="control")return o.control==="foreign"?"blocked":"open";if(q[2]==="sez"&&o.sez&&o.otherShare>.10)return"blocked";return"open"}
+function evidence(o){
+ const counts={known:0,open:0,blocked:0};checks.forEach(q=>counts[status(q,o)]++);
+ $("knownCount").textContent=counts.known;$("openCount").textContent=counts.open;$("blockedCount").textContent=counts.blocked;
+ const list=$("evidenceList");list.replaceChildren();
+ checks.forEach((q,i)=>{let b=document.createElement("button");b.className="evidence-item"+(selected===q[0]?" active":"");b.type="button";
+ let num=document.createElement("small");num.textContent=String(i+1).padStart(2,"0");let title=document.createElement("b");title.textContent=q[1];let dot=document.createElement("i");dot.className="dot "+status(q,o);b.append(num,title,dot);b.onclick=()=>{selected=q[0];evidence(o)};list.appendChild(b)});
+ const q=checks.find(x=>x[0]===selected)||checks[0],s=status(q,o),detail=$("evidenceDetail");detail.replaceChildren();
+ let heading=document.createElement("b");heading.textContent=q[1];detail.appendChild(heading);
+ let badge=document.createElement("span");badge.className="pill "+(s==="blocked"?"alert":"neutral");badge.textContent=s==="known"?"НОРМА УСТАНОВЛЕНА":s==="blocked"?"ОГРАНИЧЕНИЕ":"ТРЕБУЕТ ПРОВЕРКИ";detail.appendChild(badge);
+ for(let j=3;j<=5;j++){let p=document.createElement("p");let strong=document.createElement("strong");strong.textContent=["Норма: ","Неизвестно: ","Доказательства: "][j-3];p.append(strong,document.createTextNode(q[j]));detail.appendChild(p)}
+ let a=document.createElement("a");a.href=source[q[6]];a.target="_blank";a.rel="noopener noreferrer";a.textContent="Нормативный источник";detail.appendChild(a);
 }
-function situation(q,r){
- if(q.type!=="dynamic")return q.type;
- return r.control==="foreign"?"blocked":"open";
-}
-function renderEvidence(r){
- const known=questions.filter(q=>q.type==="known").length;
- const blocked=questions.filter(q=>situation(q,r)==="blocked").length+(r.sez&&!r.two&&r.other>.10?1:0);
- el("all-count").textContent=questions.length+" юридических узлов";
- el("n-known").textContent=known;el("n-open").textContent=questions.length-known-questions.filter(q=>situation(q,r)==="blocked").length;el("n-blocked").textContent=blocked;
- let list=el("evidence");list.replaceChildren();
- questions.forEach((q,i)=>{
-  const state=situation(q,r);
-  const btn=document.createElement("button");btn.type="button";
-  const number=document.createElement("span");number.textContent=String(i+1).padStart(2,"0");
-  const text=document.createElement("strong");text.textContent=q.name;
-  const dot=document.createElement("span");dot.className="dot "+(state==="known"?"known":state==="blocked"?"blocked":"");
-  btn.append(number,text,dot);
-  btn.onclick=()=>showDetail(q,r,btn);
-  list.appendChild(btn);
+function allowed(){
+ const revenue=N("proc")+N("tech");
+ if($("taxT").value==="osno")$("vatT").value="22";
+ if($("taxT").value!=="osno"&&$("vatT").value==="exempt"&&revenue>20)$("vatT").value="22";
+ if($("taxT").value!=="osno"&&$("vatT").value==="7"&&revenue<=250)$("vatT").value="5";
+ if($("taxP").value==="osno")$("vatP").value="22";
+ $("processingControls").hidden=$("structure").value==="one";
+ document.querySelectorAll(".choices").forEach(group=>{
+  let field=group.dataset.for,current=$(field).value;
+  let vat=field.startsWith("vat"),reg=field==="vatT"?$("taxT").value:$("taxP").value;
+  for(const b of group.querySelectorAll("button")){b.setAttribute("aria-pressed",String(current===b.dataset.val));
+   b.disabled=vat&&((reg==="osno"&&b.dataset.val!=="22")||(field==="vatT"&&revenue>20&&b.dataset.val==="exempt")||(field==="vatT"&&revenue<=250&&b.dataset.val==="7"));
+  }
  });
- if(!list.querySelector(".selected"))list.querySelector("button")?.click();
 }
-function showDetail(q,r,btn){
- el("evidence").querySelectorAll("button").forEach(x=>x.classList.toggle("selected",x===btn));
- const state=situation(q,r),box=el("detail");box.replaceChildren();
- const title=document.createElement("b");title.textContent=q.name;box.appendChild(title);
- const status=document.createElement("div");status.className="tag "+(state==="known"?"green":state==="blocked"?"red":"amber");
- status.textContent=state==="known"?"НОРМА УСТАНОВЛЕНА · ПРИМЕНИМОСТЬ НЕ ПРОВЕРЕНА":state==="blocked"?"ОБЫЧНАЯ ПРОЦЕДУРА НЕДОСТУПНА":"ТРЕБУЕТ ПОДТВЕРЖДЕНИЯ";
- box.appendChild(status);
- const p=document.createElement("p");p.textContent=q.rule;box.appendChild(p);
- const h=document.createElement("b");h.textContent="Какие доказательства нужны";box.appendChild(h);
- const proof=document.createElement("p");proof.textContent=q.proof;box.appendChild(proof);
- const effect=document.createElement("p");effect.textContent="Экономическое значение: "+q.why;box.appendChild(effect);
- if(source[q.src]){const a=document.createElement("a");a.href=source[q.src];a.target="_blank";a.rel="noopener";a.textContent="Открыть нормативный источник ↗";box.appendChild(a)}
+function calculate(){
+ const rev=N("proc")+N("tech"),operating=N("procCost")+N("techCost"),payroll=N("procPay")+N("techPay");
+ const insurance=payroll*.30,rate=$("vatT").value,reg=$("taxT").value;
+ const inputVat=.22*(N("procCost")*.35+N("techCost")*.45),recovered=rate==="22"?inputVat:0,unrecovered=rate==="22"?0:inputVat;
+ const before=rev-operating-payroll-insurance-unrecovered;
+ const profitTax=reg==="osno"?Math.max(0,before)*.25:reg==="usn6"?Math.max(rev*.03,rev*.06-Math.min(rev*.03,insurance)):Math.max(rev*.01,Math.max(0,before)*.15);
+ const vat=rate==="exempt"?0:rev*Number(rate)/100-recovered,net=before-profitTax;
+ const payout=Math.max(0,net)*Math.min(100,N("payout"))/100,uzPart=$("control").value==="foreign"?1:.49;
+ const dividendTax=payout*uzPart*.15,owner=payout*uzPart-dividendTax,other=payout*(1-uzPart),retained=net-payout;
+ return {rev,operating,payroll,insurance,inputVat,unrecovered,before,profitTax,vat,net,owner,retained,dividendTax,other,payout};
 }
 function render(){
- const r=compute(),o=r.opt,b=r.base;
- el("take-rate").textContent="Эффективная собственная комиссия: "+(v("gmv")? (100*v("proc")/v("gmv")).toFixed(3).replace(".",",")+"% GMV":"GMV не задан");
- el("invest").textContent=m(v("capital"));
- el("model-label").textContent=r.two?"2 ООО · ОСНО":"1 ООО · ОСНО";
- el("technology").querySelector("small").textContent=r.two?"TECHNOLOGY · ОЭЗ: "+(r.sez?"гипотеза":"нет"):"ОДНО ООО · PROCESSING + TECHNOLOGY";
- el("tech-title").textContent=r.two?"VeloxPay Technology":"VeloxPay (совмещённый бизнес)";
- el("companies").classList.toggle("single",!r.two);
- el("processing").hidden=!r.two;
- el("bridge").hidden=!r.two;
- el("revT").textContent=m(v("tech")+(r.two?v("inter"):v("proc")));
- el("profitT").textContent=m(o.pbtT);
- el("taxT").textContent=m(o.taxT+o.socT);
- el("revP").textContent=m(v("proc"));
- el("profitP").textContent=m(o.pbtP);
- el("taxP").textContent=m(o.taxP+o.socP);
- el("amountInter").textContent=m(r.two?v("inter"):0);
- el("externalT").textContent=m(v("tech"));
- el("externalP").textContent=m(v("proc"))+" · GMV "+m(v("gmv"));
- el("base").textContent=m(b.toOwner);
- el("optim").textContent=m(o.toOwner);
- const difference=o.toOwner-b.toOwner;
- el("delta").textContent=(difference>=0?"+":"")+m(difference);
- el("result-status").textContent=(!r.two&&r.sez&&r.other>.10)?"РИСК: ДОЛЯ ИНОЙ ДЕЯТЕЛЬНОСТИ "+Math.round(r.other*100)+"%":r.eligible?"ГИПОТЕЗА · НЕ ВЕРИФИЦИРОВАНО":"ЛЬГОТНАЯ ВЕТВЬ НЕ ВЫБРАНА";
- el("owner-assumption").textContent=r.control==="foreign"?"Выплаты рассчитаны для условных 100% узбекского участия, удержание дивидендов 15% — модельное допущение, не применение СИДН.":"При российском контроле для иллюстрации принята узбекская доля 49%; её фактический размер и права на доход нужно согласовать отдельно. Удержание 15% — допущение.";
- el("profit-tax").textContent=m(o.taxT+o.taxP);
- el("vat-tax").textContent=m(o.vat);
- el("social-tax").textContent=m(o.socT+o.socP);
- el("div-tax").textContent=m(o.dividendWht);
- renderEvidence(r);
- if(!r.two&&r.sez&&r.other>.10){
-   const box=el("detail");
-   const p=document.createElement("p");p.style.color="#a43344";p.textContent="Существенный риск: в едином ООО доля непрофильной деятельности в гипотезе "+Math.round(r.other*100)+"%, что выше установленного для иной деятельности предела 10%.";
-   box.appendChild(p);
+ allowed();const r=calculate(),two=$("structure").value==="two",sez=$("sez").value==="yes",otherShare=N("proc")/Math.max(.00001,r.rev);
+ const o={two,sez,control:$("control").value,otherShare};
+ $("financingAmount").textContent=m(N("capital"));$("excludedCapital").textContent=m(N("capital"));$("ownerAmount").textContent=m(r.owner);
+ $("revenueTech").textContent=m(r.rev);$("taxTech").textContent=m(r.profitTax+r.insurance);$("netTech").textContent=m(r.net);
+ const names={osno:"ОСНО",usn6:"УСН 6%",usn15:"УСН 15%"};
+ $("techMode").textContent=names[$("taxT").value]+" · "+($("vatT").value==="exempt"?"без НДС":"НДС "+$("vatT").value+"%");
+ $("procMode").textContent=names[$("taxP").value]+" · "+($("vatP").value==="exempt"?"без НДС":"НДС "+$("vatP").value+"%");
+ $("futureCompany").hidden=!two;$("transferArrow").hidden=!two;
+ let sezWarn=$("sezWarning");sezWarn.className="legal-inline";
+ if(sez&&otherShare>.10){sezWarn.classList.add("critical");sezWarn.textContent="Критическая проверка ОЭЗ: если процессинговые комиссии относятся к иной деятельности, их доля "+pc(otherShare)+" превышает лимит 10% по ст. 10 № 116-ФЗ. Требуется правовая квалификация операций."}
+ else sezWarn.textContent=sez?"Льготы ОЭЗ здесь не применены автоматически: необходимо подтвердить статус резидента и квалификацию доходов.":"Льготы ОЭЗ в первом году не применяются.";
+ $("externalRevenue").textContent=m(r.rev);$("ownerPercent").textContent=pc(r.owner/Math.max(.00001,r.rev));
+ $("retainedPercent").textContent=pc(r.retained/Math.max(.00001,r.rev));
+ $("profitTax").textContent=m(r.profitTax);$("socialTax").textContent=m(r.insurance);$("vatTax").textContent=m(r.vat);$("divTax").textContent=m(r.dividendTax);
+ const segments=[["Расходы, ФОТ и взносы",r.operating+r.payroll+r.insurance+r.unrecovered,"#8192a6"],["Налог на прибыль / УСН",r.profitTax,"#b78938"],["Налог на дивиденды",r.dividendTax,"#c65e67"],["Собственнику в Узбекистан",r.owner,"#118b74"],["Реинвестирование",r.retained,"#4b79bf"],["Другим собственникам",r.other,"#a8b7c9"]];
+ const stack=$("stack"),legend=$("stackLegend");stack.replaceChildren();legend.replaceChildren();
+ for(const [title,value,color] of segments){if(value<=0)continue;
+  let item=document.createElement("span");item.style.width=(value/Math.max(.00001,r.rev)*100)+"%";item.style.background=color;item.title=title+": "+pc(value/Math.max(.00001,r.rev));stack.appendChild(item);
+  let row=document.createElement("div"),dot=document.createElement("i"),name=document.createElement("span"),percent=document.createElement("b");dot.style.background=color;name.textContent=title;percent.textContent=pc(value/Math.max(.00001,r.rev));row.append(dot,name,percent);legend.appendChild(row);
  }
+ let notes=[];
+ if(sez&&otherShare>.10)notes.push("ОЭЗ: процессинговая доля "+pc(otherShare)+" должна быть квалифицирована до применения льгот.");
+ if($("taxT").value!=="osno"&&$("vatT").value==="5")notes.push("Ставка НДС 5% на УСН предполагает дополнительную проверку условий и выручки предыдущего года.");
+ if($("taxT").value!=="osno")notes.push("Право на УСН зависит также от состава участников, ограничений по доходам и других условий.");
+ const msg=$("statusMessage");msg.className="status-message"+(sez&&otherShare>.10?" blocked":notes.length?" pending":"");
+ msg.textContent=notes.length?notes.join(" ")+" Налоговый результат является предварительным расчётом.":"Налоговый результат предварительный: действительные договоры, расходы, банковские полномочия и условия налоговых режимов требуют проверки.";
+ evidence(o);
 }
-ids.forEach(id=>{el(id).addEventListener("input",render);el(id).addEventListener("change",render)});
-el("reset").onclick=()=>{ids.forEach(id=>el(id).value=initial[id]);render()};
+ids.forEach(id=>{$(id).addEventListener("input",render);$(id).addEventListener("change",render)});
+document.querySelectorAll(".choices").forEach(group=>group.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{if(b.disabled)return;$(group.dataset.for).value=b.dataset.val;render()})));
+$("reset").onclick=()=>{ids.forEach(id=>$(id).value=original[id]);selected="bank";render()};
 render();
