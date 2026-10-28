@@ -68,6 +68,7 @@ function render(){
  const names={osno:"ОСНО",usn6:"УСН 6%",usn15:"УСН 15%"};
  $("techMode").textContent=names[$("taxT").value]+" · "+($("vatT").value==="exempt"?"без НДС":"НДС "+$("vatT").value+"%");
  $("procMode").textContent=names[$("taxP").value]+" · "+($("vatP").value==="exempt"?"без НДС":"НДС "+$("vatP").value+"%");
+ $("bothModes").textContent=two?("2027 · ООО "+names[$("taxT").value]+" + 2028 · ООО "+names[$("taxP").value]):("2027 · ООО "+names[$("taxT").value]+" · без выделения Processing");
  $("futureCompany").hidden=!two;$("transferArrow").hidden=!two;
  let sezWarn=$("sezWarning");sezWarn.className="legal-inline";
  if(sez&&otherShare>.10){sezWarn.classList.add("critical");sezWarn.textContent="Критическая проверка ОЭЗ: если процессинговые комиссии относятся к иной деятельности, их доля "+pc(otherShare)+" превышает лимит 10% по ст. 10 № 116-ФЗ. Требуется правовая квалификация операций."}
