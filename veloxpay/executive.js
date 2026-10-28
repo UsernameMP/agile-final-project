@@ -23,7 +23,7 @@ const checks=[
 ["rnko","Проектирование расчётной НКО (РНКО)","open","Банк России регулирует РНКО как отдельный вид небанковской кредитной организации с ограниченным перечнем операций.","Какие банковские операции планируются, каковы требования к капиталу, лицензии, руководителям и инфраструктуре?","Концепция банковских операций, источники капитала, регуляторный план, комплаенс и ИТ-контур.","rnko"]
 ];
 let selected="bank";
-function status(q,o){if(q[2]==="known")return"known";if(q[2]==="control")return o.control==="foreign"?"blocked":"open";if(q[2]==="sez"&&o.sez&&o.otherShare>.10)return"blocked";return"open"}
+function status(q,o){if(q[0]==="usn"&&o.usnBlocked)return"blocked";if(q[2]==="known")return"known";if(q[2]==="control")return o.control==="foreign"?"blocked":"open";if(q[2]==="sez"&&o.sez&&o.otherShare>.10)return"blocked";return"open"}
 function evidence(o){
  const counts={known:0,open:0,blocked:0};checks.forEach(q=>counts[status(q,o)]++);
  $("knownCount").textContent=counts.known;$("openCount").textContent=counts.open;$("blockedCount").textContent=counts.blocked;
@@ -76,8 +76,8 @@ function calculate(){
 }
 function render(){
  allowed();const r=calculate(),two=$("structure").value==="two",sez=$("sez").value==="yes",otherShare=N("proc")/Math.max(.00001,r.rev);
- const o={two,sez,control:$("control").value,otherShare};
- $("financingAmount").textContent=m(N("capital"));$("excludedCapital").textContent=m(N("capital"));$("ownerAmount").textContent=m(r.owner);
+ const o={two,sez,control:$("control").value,otherShare,usnBlocked:r.vatRule.status==="blocked"};
+ $("financingAmount").textContent=m(N("capital"));$("excludedCapital").textContent=m(N("capital"));$("ownerAmount").textContent=o.usnBlocked?"Недоступно":m(r.owner);
  $("revenueTech").textContent=m(r.rev);$("taxTech").textContent=m(r.profitTax+r.insurance);$("netTech").textContent=m(r.net);
  const names={osno:"ОСНО",usn6:"УСН 6%",usn15:"УСН 15%"};
  $("techMode").textContent=names[$("taxT").value]+" · "+(r.vatRule.rate==="exempt"?"без НДС":"НДС "+r.vatRule.rate+"%");
@@ -92,7 +92,7 @@ function render(){
  if(sez&&otherShare>.10){sezWarn.classList.add("critical");sezWarn.textContent="Критическая проверка ОЭЗ: если процессинговые комиссии относятся к иной деятельности, их доля "+pc(otherShare)+" превышает лимит 10% по ст. 10 № 116-ФЗ. Требуется правовая квалификация операций."}
  else sezWarn.textContent=sez?"Льготы ОЭЗ здесь не применены автоматически: необходимо подтвердить статус резидента и квалификацию доходов.":"Льготы ОЭЗ в первом году не применяются.";
  $("revenueExplain").textContent=m(N("proc"))+" от процессинга + "+m(N("tech"))+" за разработку = "+m(r.rev)+" операционной выручки; "+m(N("capital"))+" финансирования и "+m(N("gmv"))+" оборота платежей в выручку не входят.";
- $("externalRevenue").textContent=m(r.rev);$("ownerPercent").textContent=pc(r.owner/Math.max(.00001,r.rev));
+ $("externalRevenue").textContent=m(r.rev);$("ownerPercent").textContent=o.usnBlocked?"—":pc(r.owner/Math.max(.00001,r.rev));
  $("retainedPercent").textContent=pc(r.retained/Math.max(.00001,r.rev));
  $("profitTax").textContent=m(r.profitTax);$("socialTax").textContent=m(r.insurance);$("vatTax").textContent=m(r.vat);$("divTax").textContent=m(r.dividendTax);
  const segments=[["Расходы, ФОТ и взносы",r.operating+r.payroll+r.insurance+r.unrecovered,"#8192a6"],["Налог на прибыль / УСН",r.profitTax,"#b78938"],["Налог на дивиденды",r.dividendTax,"#c65e67"],["Собственнику в Узбекистан",r.owner,"#118b74"],["Реинвестирование",r.retained,"#4b79bf"],["Другим собственникам",r.other,"#a8b7c9"]];
@@ -107,7 +107,7 @@ function render(){
  if(r.vatRule.status==="blocked")notes.push("Выбранная налоговая конфигурация недоступна при указанной выручке.");
  if($("taxT").value!=="osno")notes.push("Право на УСН зависит также от состава участников, ограничений по доходам и других условий.");
  if(r.vatRule.status==="project")notes.push("Порог 2027 года основан на проекте дефлятора 1,153 и не является окончательным нормативом.");
- const msg=$("statusMessage");msg.className="status-message"+(sez&&otherShare>.10?" blocked":notes.length?" pending":"");
+ const msg=$("statusMessage");msg.className="status-message"+(o.usnBlocked||sez&&otherShare>.10?" blocked":notes.length?" pending":"");
  msg.textContent=notes.length?notes.join(" ")+" Налоговый результат является предварительным расчётом.":"Налоговый результат предварительный: действительные договоры, расходы, банковские полномочия и условия налоговых режимов требуют проверки.";
  evidence(o);
 }
