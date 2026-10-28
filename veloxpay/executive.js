@@ -80,13 +80,18 @@ function render(){
  $("financingAmount").textContent=m(N("capital"));$("excludedCapital").textContent=m(N("capital"));$("ownerAmount").textContent=m(r.owner);
  $("revenueTech").textContent=m(r.rev);$("taxTech").textContent=m(r.profitTax+r.insurance);$("netTech").textContent=m(r.net);
  const names={osno:"ОСНО",usn6:"УСН 6%",usn15:"УСН 15%"};
- $("techMode").textContent=names[$("taxT").value]+" · "+($("vatT").value==="exempt"?"без НДС":"НДС "+$("vatT").value+"%");
- $("procMode").textContent=names[$("taxP").value]+" · "+($("vatP").value==="exempt"?"без НДС":"НДС "+$("vatP").value+"%");
+ $("techMode").textContent=names[$("taxT").value]+" · "+(r.vatRule.rate==="exempt"?"без НДС":"НДС "+r.vatRule.rate+"%");
+ $("vatExplanationT").textContent=r.vatRule.label;
+ const processingVat=vatFor($("taxP").value,$("vatP").value,N("proc"));
+ $("procMode").textContent=names[$("taxP").value]+" · "+(processingVat.rate==="exempt"?"без НДС":"НДС "+processingVat.rate+"%")+"*";
+ $("vatExplanationP").textContent=processingVat.label+". На 2028 год необходимо отдельно подтвердить дефлятор и план продаж.";
+
  $("bothModes").textContent=two?("2027 · ООО "+names[$("taxT").value]+" + 2028 · ООО "+names[$("taxP").value]):("2027 · ООО "+names[$("taxT").value]+" · без выделения Processing");
  $("futureCompany").hidden=!two;$("transferArrow").hidden=!two;
  let sezWarn=$("sezWarning");sezWarn.className="legal-inline";
  if(sez&&otherShare>.10){sezWarn.classList.add("critical");sezWarn.textContent="Критическая проверка ОЭЗ: если процессинговые комиссии относятся к иной деятельности, их доля "+pc(otherShare)+" превышает лимит 10% по ст. 10 № 116-ФЗ. Требуется правовая квалификация операций."}
  else sezWarn.textContent=sez?"Льготы ОЭЗ здесь не применены автоматически: необходимо подтвердить статус резидента и квалификацию доходов.":"Льготы ОЭЗ в первом году не применяются.";
+ $("revenueExplain").textContent=m(N("proc"))+" от процессинга + "+m(N("tech"))+" за разработку = "+m(r.rev)+" операционной выручки; "+m(N("capital"))+" финансирования и "+m(N("gmv"))+" оборота платежей в выручку не входят.";
  $("externalRevenue").textContent=m(r.rev);$("ownerPercent").textContent=pc(r.owner/Math.max(.00001,r.rev));
  $("retainedPercent").textContent=pc(r.retained/Math.max(.00001,r.rev));
  $("profitTax").textContent=m(r.profitTax);$("socialTax").textContent=m(r.insurance);$("vatTax").textContent=m(r.vat);$("divTax").textContent=m(r.dividendTax);
@@ -98,13 +103,15 @@ function render(){
  }
  let notes=[];
  if(sez&&otherShare>.10)notes.push("ОЭЗ: процессинговая доля "+pc(otherShare)+" должна быть квалифицирована до применения льгот.");
- if($("taxT").value!=="osno"&&$("vatT").value==="5")notes.push("Ставка НДС 5% на УСН предполагает дополнительную проверку условий и выручки предыдущего года.");
+ if($("taxT").value!=="osno")notes.push(r.vatRule.label+".");
+ if(r.vatRule.status==="blocked")notes.push("Выбранная налоговая конфигурация недоступна при указанной выручке.");
  if($("taxT").value!=="osno")notes.push("Право на УСН зависит также от состава участников, ограничений по доходам и других условий.");
+ if(r.vatRule.status==="project")notes.push("Порог 2027 года основан на проекте дефлятора 1,153 и не является окончательным нормативом.");
  const msg=$("statusMessage");msg.className="status-message"+(sez&&otherShare>.10?" blocked":notes.length?" pending":"");
  msg.textContent=notes.length?notes.join(" ")+" Налоговый результат является предварительным расчётом.":"Налоговый результат предварительный: действительные договоры, расходы, банковские полномочия и условия налоговых режимов требуют проверки.";
  evidence(o);
 }
 ids.forEach(id=>{$(id).addEventListener("input",render);$(id).addEventListener("change",render)});
-document.querySelectorAll(".choices").forEach(group=>group.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{if(b.disabled)return;$(group.dataset.for).value=b.dataset.val;render()})));
+document.querySelectorAll(".choices").forEach(group=>group.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{if(b.disabled)return;const field=group.dataset.for;$(field).value=b.dataset.val;if(field==="taxT")$("vatT").value=b.dataset.val==="osno"?"22":"auto";if(field==="taxP")$("vatP").value=b.dataset.val==="osno"?"22":"auto";render()})));
 $("reset").onclick=()=>{ids.forEach(id=>$(id).value=original[id]);selected="bank";render()};
 render();
